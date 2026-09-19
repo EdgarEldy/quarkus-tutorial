@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.sql.Connection;
 import javax.sql.DataSource;
+import org.jboss.logging.Logger;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
@@ -24,6 +25,7 @@ import org.eclipse.microprofile.health.Readiness;
 @ApplicationScoped
 public class DatabaseHealthCheck implements HealthCheck {
 
+    private static final Logger LOG = Logger.getLogger(DatabaseHealthCheck.class);
     private static final String CHECK_NAME = "database";
     private static final int VALIDATION_TIMEOUT_SECONDS = 2;
 
@@ -42,7 +44,9 @@ public class DatabaseHealthCheck implements HealthCheck {
                     .withData("reason", "Connection is not valid")
                     .build();
         } catch (Exception e) {
-            // Deliberately a short message only: exception details could leak host or schema info.
+            // The cause goes to the server log for operators; the HTTP response keeps a short message
+            // only, since exception details could leak host or schema information.
+            LOG.warn("Readiness check could not obtain a database connection", e);
             return HealthCheckResponse.named(CHECK_NAME)
                     .down()
                     .withData("reason", "Unable to obtain a database connection")
