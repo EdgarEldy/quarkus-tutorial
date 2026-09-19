@@ -12,8 +12,10 @@ import com.edgareldy.quarkustutorial.repository.CustomerRepository;
 import com.edgareldy.quarkustutorial.repository.OrderRepository;
 import com.edgareldy.quarkustutorial.repository.ProductRepository;
 import com.edgareldy.quarkustutorial.service.OrderService;
+import com.edgareldy.quarkustutorial.service.event.OrderCreatedEvent;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
@@ -43,6 +45,11 @@ public class OrderServiceImpl implements OrderService {
     // from the row as it is now, never from a cached copy.
     @Inject
     ProductRepository productRepository;
+
+    // Synchronous CDI event, fired inside the transaction: observers declared with
+    // TransactionPhase.AFTER_SUCCESS (see OrderEventBroadcaster) only run once it commits.
+    @Inject
+    Event<OrderCreatedEvent> orderCreatedEvent;
 
     @Override
     @Transactional
@@ -84,6 +91,7 @@ public class OrderServiceImpl implements OrderService {
         order.setQuantity(request.quantity());
         order.setTotal(total);
         orderRepository.persist(order);
+        orderCreatedEvent.fire(new OrderCreatedEvent(order.getId()));
         return toResponse(order);
     }
 
