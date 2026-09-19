@@ -63,10 +63,11 @@ public class UserRepository implements PanacheRepository<User> {
     /**
      * @param resource the permission resource
      * @param action   the permission action
-     * @return whether (count above zero) users hold a role granting this permission
+     * @return how many ENABLED, unlocked users hold a role granting this permission (an account that
+     *         cannot log in must not count as an administrator)
      */
     public long countHolders(String resource, String action) {
-        return count("from User u join u.roles r join r.permissions p where p.resource = ?1 and p.action = ?2",
+        return count("from User u join u.roles r join r.permissions p where p.resource = ?1 and p.action = ?2 and u.enabled = true and u.accountLocked = false",
                 resource, action);
     }
 
@@ -78,7 +79,8 @@ public class UserRepository implements PanacheRepository<User> {
      */
     public long countHoldersExcludingUser(String resource, String action, Long userId) {
         return count("from User u join u.roles r join r.permissions p "
-                + "where p.resource = ?1 and p.action = ?2 and u.id <> ?3", resource, action, userId);
+                + "where p.resource = ?1 and p.action = ?2 and u.id <> ?3 "
+                + "and u.enabled = true and u.accountLocked = false", resource, action, userId);
     }
 
     /**
@@ -89,7 +91,8 @@ public class UserRepository implements PanacheRepository<User> {
      */
     public long countHoldersExcludingRole(String resource, String action, Long roleId) {
         return count("from User u join u.roles r join r.permissions p "
-                + "where p.resource = ?1 and p.action = ?2 and r.id <> ?3", resource, action, roleId);
+                + "where p.resource = ?1 and p.action = ?2 and r.id <> ?3 "
+                + "and u.enabled = true and u.accountLocked = false", resource, action, roleId);
     }
 
     /**
