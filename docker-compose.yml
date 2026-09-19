@@ -36,6 +36,7 @@ services:
         condition: service_healthy
     environment:
       DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-quarkus_tutorial}
+      DB_REACTIVE_URL: postgresql://db:5432/${DB_NAME:-quarkus_tutorial}
       DB_USER: ${DB_USER:-quarkus}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       JWT_PUBLIC_KEY_LOCATION: /keys/publicKey.pem
