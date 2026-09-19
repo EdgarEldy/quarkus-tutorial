@@ -101,7 +101,9 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setCategory(category);
         product.setProductName(request.productName());
-        product.setUnitPrice(request.unitPrice());
+        // Scale to 2 decimals like the NUMERIC(12, 2) column (ProductRequest allows at most 2), so the
+        // response to a write shows the same value a later read returns from the database.
+        product.setUnitPrice(request.unitPrice().setScale(2));
     }
 
     private static ProductResponse toResponse(Product product) {
