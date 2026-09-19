@@ -11,6 +11,7 @@ import com.edgareldy.quarkustutorial.entity.Category;
 import com.edgareldy.quarkustutorial.exception.BusinessRuleException;
 import com.edgareldy.quarkustutorial.exception.ResourceNotFoundException;
 import com.edgareldy.quarkustutorial.repository.CategoryRepository;
+import com.edgareldy.quarkustutorial.repository.ProductRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -32,13 +33,16 @@ import org.mockito.ArgumentCaptor;
 class CategoryServiceImplTest {
 
     private CategoryRepository repository;
+    private ProductRepository productRepository;
     private CategoryServiceImpl service;
 
     @BeforeEach
     void setUp() {
         repository = mock(CategoryRepository.class);
         service = new CategoryServiceImpl();
+        productRepository = mock(ProductRepository.class);
         service.categoryRepository = repository;
+        service.productRepository = productRepository;
     }
 
     private static Category category(Long id, String name) {
@@ -52,7 +56,7 @@ class CategoryServiceImplTest {
     void deleteIsRefusedWhenCategoryHasProducts() {
         Category c = category(1L, "Books");
         when(repository.findById(1L)).thenReturn(c);
-        when(repository.countProducts(1L)).thenReturn(2L);
+        when(productRepository.countByCategoryId(1L)).thenReturn(2L);
 
         assertThrows(BusinessRuleException.class, () -> service.delete(1L));
         verify(repository, never()).delete(any(Category.class));
@@ -62,7 +66,7 @@ class CategoryServiceImplTest {
     void deleteRemovesCategoryWithoutProducts() {
         Category c = category(1L, "Books");
         when(repository.findById(1L)).thenReturn(c);
-        when(repository.countProducts(1L)).thenReturn(0L);
+        when(productRepository.countByCategoryId(1L)).thenReturn(0L);
 
         service.delete(1L);
 
