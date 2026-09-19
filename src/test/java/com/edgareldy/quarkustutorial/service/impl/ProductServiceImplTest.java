@@ -12,6 +12,7 @@ import com.edgareldy.quarkustutorial.entity.Product;
 import com.edgareldy.quarkustutorial.exception.BusinessRuleException;
 import com.edgareldy.quarkustutorial.exception.ResourceNotFoundException;
 import com.edgareldy.quarkustutorial.repository.CategoryRepository;
+import com.edgareldy.quarkustutorial.repository.OrderRepository;
 import com.edgareldy.quarkustutorial.repository.ProductRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
@@ -34,6 +35,7 @@ class ProductServiceImplTest {
 
     private ProductRepository productRepository;
     private CategoryRepository categoryRepository;
+    private OrderRepository orderRepository;
     private ProductServiceImpl service;
 
     @BeforeEach
@@ -43,6 +45,8 @@ class ProductServiceImplTest {
         service = new ProductServiceImpl();
         service.productRepository = productRepository;
         service.categoryRepository = categoryRepository;
+        orderRepository = mock(OrderRepository.class);
+        service.orderRepository = orderRepository;
     }
 
     private static Category category(Long id) {
@@ -134,6 +138,16 @@ class ProductServiceImplTest {
         service.delete(3L);
 
         verify(productRepository).delete(existing);
+    }
+
+    @Test
+    void deleteIsRefusedWhileOrdersReferenceTheProduct() {
+        Product existing = product(3L, category(1L), "Old", "1.00");
+        when(productRepository.findById(3L)).thenReturn(existing);
+        when(orderRepository.countByProductId(3L)).thenReturn(1L);
+
+        assertThrows(BusinessRuleException.class, () -> service.delete(3L));
+        verify(productRepository, never()).delete(any(Product.class));
     }
 
     @Test
