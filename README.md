@@ -81,7 +81,7 @@ Three everyday Quarkus mechanics this tutorial relies on throughout, worth under
 
 | Component | Choice |
 |---|---|
-| Framework | Quarkus 3.30.x (LTS stream) |
+| Framework | Quarkus 3.33.x (LTS stream) |
 | Language | Java 21 (LTS) |
 | Build | Maven |
 | REST layer | Quarkus REST (`quarkus-rest`, `quarkus-rest-jackson`) - the current name for what was previously branded "RESTEasy Reactive" |
@@ -220,7 +220,7 @@ public record ApiResponse<T>(
 
 **Errors**: every non-2xx response is a **Problem Details** document (RFC 9457, which obsoletes RFC 7807 - same `application/problem+json` wire format), produced by the `quarkus-http-problem` Quarkiverse extension rather than a hand-written `ExceptionMapper`.
 
-- `ResourceNotFoundException` and `BusinessRuleException` extend `io.quarkiverse.resteasy.problem.HttpProblem` directly and are thrown normally from a service method - `HttpProblem` already *is* a `RuntimeException`, built via its own builder (`.withTitle(...)`, `.withStatus(...)`, `.withDetail(...)`), so there's no separate DTO and no manual mapping step for these two
+- `ResourceNotFoundException` and `BusinessRuleException` extend `io.quarkiverse.httpproblem.HttpProblem` directly and are thrown normally from a service method - `HttpProblem` already *is* a `RuntimeException`, built via its own builder (`.withTitle(...)`, `.withStatus(...)`, `.withDetail(...)`), so there's no separate DTO and no manual mapping step for these two
 - `quarkus-http-problem` ships its own built-in mappers for the exceptions a project doesn't throw on purpose: Bean Validation failures become a Problem with a `violations` extension listing each field, and anything unmapped becomes a generic 500 Problem with implementation details stripped out before the response is sent - both without a single line of this project's own code
 - A response's `type`/`title`/`status`/`detail` fields carry what an `ApiResponse<Void>` used to carry in `message`, and any structured, field-level detail (like a validation error list) rides in the same document's `extensions` rather than a nested `data`
 
@@ -251,16 +251,16 @@ Example error response (`GET /api/v1/products/999` on a missing product):
 
 ### Tasks
 
-- [ ] Generate the project (`mvn io.quarkus:quarkus-maven-plugin:create`, or code.quarkus.io), Java 21, Maven
-- [ ] Extensions: `quarkus-rest`, `quarkus-rest-jackson`, `quarkus-hibernate-orm-panache`, `quarkus-jdbc-postgresql`, `quarkus-flyway`, `quarkus-hibernate-validator`, `quarkus-smallrye-jwt`, `quarkus-smallrye-jwt-build`, `quarkus-security`, `quarkus-smallrye-openapi`, `quarkus-smallrye-health`, `quarkus-cache`, `quarkus-scheduler`, `io.quarkiverse.resteasy.problem:quarkus-http-problem`
-- [ ] A custom `@Readiness` check (`DatabaseHealthCheck`, verifying a real connection can be obtained) alongside the default one `quarkus-smallrye-health` already provides, and a custom `@Liveness` check confirming the application isn't in a stuck state - both visible at `/q/health`, and individually at `/q/health/ready`/`/q/health/live`
-- [ ] Test extensions: `quarkus-junit5`, `rest-assured`
-- [ ] `ApiResponse<T>`, `PageResponse<T>`
-- [ ] `ResourceNotFoundException`, `BusinessRuleException` (both extending `HttpProblem`, built via its builder with the appropriate status/title); `quarkus-http-problem` configuration (base `type` URI prefix, whether stack traces are ever included - never in `%prod`)
-- [ ] Flyway script `V1__init_schema.sql` (all tables from both domains)
-- [ ] `application.properties`: JWT signing key location, Flyway enabled, `%test`/`%dev` profiles left without a configured datasource (Dev Services provisions PostgreSQL automatically), `%prod` profile with a real connection string
-- [ ] `docker-compose.yml` (app + PostgreSQL, for the packaged application only - not used in dev/test), `Dockerfile.jvm`
-- [ ] `.github/workflows/ci.yml`: `mvn verify` (Dev Services provisions PostgreSQL inside the CI runner automatically, same as locally)
+- [x] Generate the project (`mvn io.quarkus:quarkus-maven-plugin:create`, or code.quarkus.io), Java 21, Maven
+- [x] Extensions: `quarkus-rest`, `quarkus-rest-jackson`, `quarkus-hibernate-orm-panache`, `quarkus-jdbc-postgresql`, `quarkus-flyway`, `quarkus-hibernate-validator`, `quarkus-smallrye-jwt`, `quarkus-smallrye-jwt-build`, `quarkus-security`, `quarkus-smallrye-openapi`, `quarkus-smallrye-health`, `quarkus-cache`, `quarkus-scheduler`, `io.quarkiverse.httpproblem:quarkus-http-problem`
+- [x] A custom `@Readiness` check (`DatabaseHealthCheck`, verifying a real connection can be obtained) alongside the default one `quarkus-smallrye-health` already provides, and a custom `@Liveness` check confirming the application isn't in a stuck state - both visible at `/q/health`, and individually at `/q/health/ready`/`/q/health/live`
+- [x] Test extensions: `quarkus-junit`, `quarkus-junit-mockito`, `rest-assured`
+- [x] `ApiResponse<T>`, `PageResponse<T>`
+- [x] `ResourceNotFoundException`, `BusinessRuleException` (both extending `HttpProblem`, built via its builder with the appropriate status/title); the problem `type` URI is a constant on each exception (this version of `quarkus-http-problem` has no type prefix option) and stack traces are never included in a response, in any profile
+- [x] Flyway script `V1__init_schema.sql` (all tables from both domains)
+- [x] `application.properties`: JWT signing key location, Flyway enabled, `%test`/`%dev` profiles left without a configured datasource (Dev Services provisions PostgreSQL automatically), `%prod` profile with a real connection string
+- [x] `docker-compose.yml` (app + PostgreSQL, for the packaged application only - not used in dev/test), `Dockerfile.jvm`
+- [x] `.github/workflows/ci.yml`: `mvn verify` (Dev Services provisions PostgreSQL inside the CI runner automatically, same as locally)
 
 ## feature/auth
 
@@ -278,15 +278,15 @@ Example error response (`GET /api/v1/products/999` on a missing product):
 
 ### Tasks
 
-- [ ] `User` entity, `ActivationToken`, `BlacklistedToken`, `PasswordResetToken`
-- [ ] `UserRepository` (`PanacheRepository<User>`)
-- [ ] `AuthService` (interface) + implementation: registration, activation, login (password hashing/verification via `io.quarkus.elytron.security.common.BcryptUtil.bcryptHash`/`matches`, from `quarkus-elytron-security-common` - already on the classpath via `quarkus-security`, not an external library), logout, forgot/reset password
-- [ ] `forgotPassword` returns the exact same response - same status code, same body, roughly the same timing (no early return skipping the token-generation work) - whether or not the submitted email matches an existing account, so the endpoint can't be used to enumerate registered emails
-- [ ] `JwtIssuer`: builds a signed JWT (`io.smallrye.jwt.build.Jwt`) with a unique `jti` claim, the user's id as subject
-- [ ] `@SecurityScheme(securitySchemeName = "jwt", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")` declared once (e.g. on `AuthResource` or a dedicated `OpenApiConfig` class) and referenced via `@SecurityRequirement(name = "jwt")` on protected resources, so Swagger UI's "Authorize" button actually works against `@PermissionsAllowed`-protected endpoints
-- [ ] A `ContainerRequestFilter` (or `SecurityIdentityAugmentor`, same class introduced fully in `feature/rbac`) checking the incoming JWT's `jti` against `BlacklistedToken` and rejecting the request if found
-- [ ] `AuthResource`
-- [ ] Tests (`@QuarkusTest` + RestAssured): register → activate → login → access `/me`, logout followed by a rejected request with the same token, forgot/reset password flow
+- [x] `User` entity, `ActivationToken`, `BlacklistedToken`, `PasswordResetToken`
+- [x] `UserRepository` (`PanacheRepository<User>`)
+- [x] `AuthService` (interface) + implementation: registration, activation, login (password hashing/verification via `io.quarkus.elytron.security.common.BcryptUtil.bcryptHash`/`matches`, from `quarkus-elytron-security-common`, a Quarkus module declared explicitly in the pom because `quarkus-security` does not bring it in, not an external library), logout, forgot/reset password
+- [x] `forgotPassword` returns the exact same response - same status code, same body, roughly the same timing (no early return skipping the token-generation work) - whether or not the submitted email matches an existing account, so the endpoint can't be used to enumerate registered emails
+- [x] `JwtIssuer`: builds a signed JWT (`io.smallrye.jwt.build.Jwt`) with a unique `jti` claim, the user's id as subject
+- [x] `@SecurityScheme(securitySchemeName = "jwt", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")` declared once (e.g. on `AuthResource` or a dedicated `OpenApiConfig` class) and referenced via `@SecurityRequirement(name = "jwt")` on protected resources, so Swagger UI's "Authorize" button actually works against `@PermissionsAllowed`-protected endpoints
+- [x] A `ContainerRequestFilter` (or `SecurityIdentityAugmentor`, same class introduced fully in `feature/rbac`) checking the incoming JWT's `jti` against `BlacklistedToken` and rejecting the request if found
+- [x] `AuthResource`
+- [x] Tests (`@QuarkusTest` + RestAssured): register → activate → login → access `/me`, logout followed by a rejected request with the same token, forgot/reset password flow
 
 ## feature/rbac
 
@@ -313,18 +313,18 @@ Full CRUD for users, roles, and permissions. Assignments always flow in one dire
 
 ### Tasks
 
-- [ ] `Role`, `Permission`, `AuditLog` entities, `RoleRepository`, `PermissionRepository`, `AuditLogRepository`
-- [ ] `RbacService` (interface) + implementation:
+- [x] `Role`, `Permission`, `AuditLog` entities, `RoleRepository`, `PermissionRepository`, `AuditLogRepository`
+- [x] `RbacService` (interface) + implementation:
   - `createRole`/`updateRole`/`deleteRole` - `deleteRole` rejects if any user is still assigned this role (must be unassigned first)
   - `createPermission`/`updatePermission`/`deletePermission` - `deletePermission` rejects if any role still has this permission assigned
   - `assignPermissionToRole`/`removePermissionFromRole` - `removePermissionFromRole` rejects removing `ROLE:WRITE` from a role if doing so would leave **zero** users anywhere holding a role that grants `ROLE:WRITE`
   - `assignRoleToUser`/`removeRoleFromUser` - `removeRoleFromUser` applies the same last-admin check at the point of removal from a specific user, so a self-lockout is caught however it's attempted
-- [ ] `AuditLogger`: a single `log(String action, String entityType, Long entityId, String details)` method, called from every method above - every RBAC mutation is traceable (who did what, to what, when), not just the happy-path ones
-- [ ] `PermissionSecurityIdentityAugmentor` (`SecurityIdentityAugmentor`): after JWT validation, loads the user's roles and permissions, adds each `RESOURCE:ACTION` string to the identity as a `StringPermission`
-- [ ] `UserResource`, `RoleResource`, `PermissionResource`, each method annotated `@PermissionsAllowed("...")` as listed above - `UserResource` only manages role assignment on existing users, it never creates a user directly (registration stays exclusively `feature/auth`'s job)
-- [ ] A seeding step (a `@Observes StartupEvent` method, or a Flyway data-migration): baseline permissions covering every resource/action this project defines, assigned to a seeded `ADMIN` role - without this, nobody could ever be granted `ROLE:WRITE`/`PERMISSION:WRITE` to create the first assignment
-- [ ] `ExpiredTokenCleanupJob` (`@Scheduled(cron = "0 0 3 * * ?")`, `quarkus-scheduler`): daily job deleting `BlacklistedToken`/`ActivationToken`/`PasswordResetToken` rows past their expiry, so both tables stay bounded over time - revocation and expiry checks never depend on the row still existing, so deleting it later is purely housekeeping, not a correctness concern
-- [ ] Tests: full CRUD on roles and permissions, the "still referenced" rejection on both `deleteRole` and `deletePermission`, the augmentor granting the expected permissions for a multi-role user, a `@PermissionsAllowed`-protected endpoint accepting/rejecting correctly, and specifically the last-admin rejection triggered both ways (removing the role from the last user who has it, and removing the permission from the role that was their only source of it), plus an assertion that every mutation above produces a matching `AuditLog` row
+- [x] `AuditLogger`: a single `log(String action, String entityType, Long entityId, String details)` method, called from every method above - every RBAC mutation is traceable (who did what, to what, when), not just the happy-path ones
+- [x] `PermissionSecurityIdentityAugmentor` (`SecurityIdentityAugmentor`): after JWT validation, loads the user's roles and permissions, adds each `RESOURCE:ACTION` string to the identity as a `StringPermission`
+- [x] `UserResource`, `RoleResource`, `PermissionResource`, each method annotated `@PermissionsAllowed("...")` as listed above - `UserResource` only manages role assignment on existing users, it never creates a user directly (registration stays exclusively `feature/auth`'s job)
+- [x] A seeding step (a `@Observes StartupEvent` method, or a Flyway data-migration): baseline permissions covering every resource/action this project defines, assigned to a seeded `ADMIN` role - without this, nobody could ever be granted `ROLE:WRITE`/`PERMISSION:WRITE` to create the first assignment (done as the Flyway migration `V2__seed_baseline_rbac.sql`; an optional `AdminBootstrap` startup observer, active only when `app.bootstrap-admin.email` and `app.bootstrap-admin.password` are set and given dev-only defaults in `%dev`, creates the first administrator, since nobody can otherwise hold `ADMIN`)
+- [x] `ExpiredTokenCleanupJob` (`@Scheduled(cron = "0 0 3 * * ?")`, `quarkus-scheduler`): daily job deleting `BlacklistedToken`/`ActivationToken`/`PasswordResetToken` rows past their expiry, so both tables stay bounded over time - revocation and expiry checks never depend on the row still existing, so deleting it later is purely housekeeping, not a correctness concern
+- [x] Tests: full CRUD on roles and permissions, the "still referenced" rejection on both `deleteRole` and `deletePermission`, the augmentor granting the expected permissions for a multi-role user, a `@PermissionsAllowed`-protected endpoint accepting/rejecting correctly, and specifically the last-admin rejection triggered both ways (removing the role from the last user who has it, and removing the permission from the role that was their only source of it), plus an assertion that every mutation above produces a matching `AuditLog` row
 
 ## feature/categories
 
@@ -340,10 +340,10 @@ Full CRUD for users, roles, and permissions. Assignments always flow in one dire
 
 ### Tasks
 
-- [ ] `Category` entity, repository, contract/implementation service
-- [ ] Business rule: deleting a category that still has products is rejected (`BusinessRuleException` → 422)
-- [ ] `CategoryResource`
-- [ ] Tests for every endpoint, including the rejection case and a permission-denied case
+- [x] `Category` entity, repository, contract/implementation service
+- [x] Business rule: deleting a category that still has products is rejected (`BusinessRuleException` → 422)
+- [x] `CategoryResource`
+- [x] Tests for every endpoint, including the rejection case and a permission-denied case
 
 ## feature/products
 
@@ -361,10 +361,10 @@ Depends on `feature/categories` existing, since every product references one.
 
 ### Tasks
 
-- [ ] `Product` entity, repository, contract/implementation service
-- [ ] `ProductService.findById` annotated `@CacheResult(cacheName = "product-cache")`; `ProductServiceImpl.update`/`delete` annotated `@CacheInvalidate(cacheName = "product-cache")` on the same key - a product read hits Panache once and the cache for every subsequent read until it's changed, and every write explicitly clears its own entry rather than leaving a stale cached value silently served
-- [ ] `ProductResource`
-- [ ] Tests, including the category filter, a permission-denied case, and a cache test asserting a second read doesn't hit the repository while an update correctly invalidates the entry
+- [x] `Product` entity, repository, contract/implementation service
+- [x] `ProductServiceImpl.findById` annotated `@CacheResult(cacheName = "product-cache")`; `ProductServiceImpl.update`/`delete` annotated `@CacheInvalidate(cacheName = "product-cache")` on the same key (`@CacheKey` on the id) - a product read hits Panache once and the cache for every subsequent read until it's changed, and every write explicitly clears its own entry rather than leaving a stale cached value silently served. The annotations sit on the implementation class, not on the `ProductService` interface: ArC does not apply interceptor bindings declared on an interface method
+- [x] `ProductResource`
+- [x] Tests, including the category filter, a permission-denied case, and a cache test asserting a second read doesn't hit the repository while an update correctly invalidates the entry
 
 ## feature/customers
 
@@ -380,9 +380,9 @@ Depends on `feature/categories` existing, since every product references one.
 
 ### Tasks
 
-- [ ] `Customer` entity, repository, contract/implementation service
-- [ ] `CustomerResource`
-- [ ] Tests
+- [x] `Customer` entity, repository, contract/implementation service
+- [x] `CustomerResource`
+- [x] Tests
 
 ## feature/orders
 
@@ -396,18 +396,18 @@ Depends on `feature/categories` existing, since every product references one.
 
 ### Tasks
 
-- [ ] `Order` entity, repository, contract/implementation service: computes `total = quantity * product.unitPrice`
-- [ ] `OrderResource`
-- [ ] Tests, including the total computation
+- [x] `Order` entity, repository, contract/implementation service: computes `total = quantity * product.unitPrice`
+- [x] `OrderResource`
+- [x] Tests, including the total computation
 
 ## feature/native-build (bonus)
 
 ### Tasks
 
-- [ ] `Dockerfile.native` (multi-stage: GraalVM builder image, minimal runtime image)
-- [ ] Build a native executable locally (`mvn package -Dnative -Dquarkus.native.container-build=true`, container build so a local GraalVM install isn't required)
-- [ ] Measure and document, in this branch's own notes: startup time and resident memory of the JVM-mode application versus the native executable, under the same request load
-- [ ] `.github/workflows/ci.yml` extended with a native build verification job (can be slower/separate from the main test job)
+- [x] `Dockerfile.native` (multi-stage: GraalVM builder image, minimal runtime image)
+- [x] Build a native executable locally (`mvn package -Dnative -Dquarkus.native.container-build=true`, container build so a local GraalVM install isn't required). Built and run by the CI job, since the local Docker VM (1.4 GiB) is too small for it, see `docs/native-build.md`
+- [x] Measure and document, in this branch's own notes (`docs/native-build.md`): startup time and resident memory of the JVM-mode application versus the native executable, under the same request load
+- [x] `.github/workflows/ci.yml` extended with a native build verification job (can be slower/separate from the main test job)
 
 ## feature/reactive-endpoints (bonus)
 
@@ -421,11 +421,11 @@ Quarkus lets imperative (blocking, Panache-based) and reactive (Mutiny-based) co
 
 ### Tasks
 
-- [ ] `quarkus-hibernate-reactive-panache`, `quarkus-reactive-pg-client` added alongside the existing blocking `quarkus-jdbc-postgresql` stack - both drivers coexist against the same PostgreSQL database, Dev Services provisions the container either way
-- [ ] `OrderPanacheRepositoryReactive` (`PanacheRepositoryBase` from the reactive variant), used only by the streaming endpoint - the rest of `feature/orders`' blocking repository and service stay untouched
-- [ ] A CDI event or a `Multi`-backed broadcast: `OrderServiceImpl.create` (blocking) publishes a plain CDI event after a successful commit; a reactive listener adapts that into a `Multi<Order>` that the streaming endpoint subscribes to
-- [ ] `OrderResource.stream()`: returns `Multi<Order>` with `@Produces(MediaType.SERVER_SENT_EVENTS)` - no manual thread management, Mutiny's operators handle backpressure
-- [ ] Tests: a `Multi` assertion subscriber (`AssertSubscriber`) verifying an event arrives on the stream after a `POST /api/v1/orders`, run without blocking the test thread
+- [x] `quarkus-hibernate-reactive-panache`, `quarkus-reactive-pg-client` added alongside the existing blocking `quarkus-jdbc-postgresql` stack - both drivers coexist against the same PostgreSQL database, Dev Services provisions the container either way
+- [x] `OrderPanacheRepositoryReactive` (`PanacheRepositoryBase` from the reactive variant), used only by the streaming endpoint - the rest of `feature/orders`' blocking repository and service stay untouched
+- [x] A CDI event or a `Multi`-backed broadcast: `OrderServiceImpl.create` (blocking) publishes a plain CDI event after a successful commit; a reactive listener adapts that into a `Multi<Order>` that the streaming endpoint subscribes to
+- [x] `OrderResource.stream()`: returns `Multi<Order>` with `@Produces(MediaType.SERVER_SENT_EVENTS)` - no manual thread management, Mutiny's operators handle backpressure
+- [x] Tests: a `Multi` assertion subscriber (`AssertSubscriber`) verifying an event arrives on the stream after a `POST /api/v1/orders`, run without blocking the test thread
 
 ## Order of work
 
