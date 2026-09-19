@@ -18,7 +18,8 @@ log="target/measure-${label}.log"
 # "-jar" would be handed to the program instead of the JVM and silently ignored.
 QUARKUS_HTTP_PORT="$port" "$@" >"$log" 2>&1 &
 pid=$!
-trap 'kill "$pid" 2>/dev/null || true' EXIT
+# Wait for the process to be gone, so the next measurement never finds the port still taken.
+trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true' EXIT
 
 start=$(date +%s%N)
 until curl -sf "http://localhost:${port}/q/health/ready" >/dev/null; do
@@ -44,7 +45,13 @@ for i in $(seq 1 "$requests"); do
     1) path=/q/openapi ;;
     2) path=/api/v1/products ;;
   esac
-  curl -s -o /dev/null "http://localhost:${port}${path}"
+  # 401 is the expected answer of the secured endpoint; a refused connection (000) or a 5xx means the
+  # load did not exercise the application and the figures would be meaningless.
+  code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${port}${path}")
+  if [ "$code" = "000" ] || [ "$code" -ge 500 ]; then
+    echo "Request ${i} to ${path} answered ${code}" >&2
+    exit 1
+  fi
 done
 
 reported=$(grep -o 'started in [0-9.]*s' "$log" | head -n 1 | grep -o '[0-9.]*' || echo "n/a")
