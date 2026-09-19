@@ -20,6 +20,7 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import java.util.Comparator;
 import java.util.List;
@@ -51,6 +52,12 @@ public class RbacServiceImpl implements RbacService {
 
     @Inject
     AuditLogger auditLogger;
+
+    @Inject
+    EntityManager entityManager;
+
+    // Arbitrary constant identifying the "last administrator" rule to PostgreSQL advisory locks.
+    private static final long LAST_ADMIN_LOCK_KEY = 7_301_001L;
 
     // ---- users -------------------------------------------------------------------------------
 
@@ -86,6 +93,7 @@ public class RbacServiceImpl implements RbacService {
     @Override
     @Transactional
     public UserDetailResponse removeRoleFromUser(Long userId, Long roleId) {
+        lockLastAdminRule();
         User user = findUser(userId);
         Role role = findRole(roleId);
         if (!user.getRoles().contains(role)) {
@@ -96,7 +104,7 @@ public class RbacServiceImpl implements RbacService {
                 && userRepository.countHoldersExcludingUser(ADMIN_RESOURCE, ADMIN_ACTION, userId) == 0) {
             // Logged before throwing: the audit insert commits on its own (REQUIRES_NEW), so it
             // survives the rollback this exception triggers.
-            auditLogger.log("ROLE_UNASSIGN_REJECTED", "USER", userId,
+            auditLogger.logRejected("ROLE_UNASSIGN_REJECTED", "USER", userId,
                     "role " + role.getRoleName() + " (" + roleId + "): " + LAST_ADMIN);
             throw new BusinessRuleException(LAST_ADMIN);
         }
@@ -149,7 +157,7 @@ public class RbacServiceImpl implements RbacService {
         // ROLE:WRITE from the last holder: no separate last-admin check is needed here.
         long holders = userRepository.countByRoleId(id);
         if (holders > 0) {
-            auditLogger.log("ROLE_DELETE_REJECTED", "ROLE", id, "still assigned to " + holders + " user(s)");
+            auditLogger.logRejected("ROLE_DELETE_REJECTED", "ROLE", id, "still assigned to " + holders + " user(s)");
             throw new BusinessRuleException("Role " + role.getRoleName() + " is still assigned to " + holders
                     + " user(s); remove it from them first");
         }
@@ -172,6 +180,7 @@ public class RbacServiceImpl implements RbacService {
     @Override
     @Transactional
     public RoleResponse removePermissionFromRole(Long roleId, Long permissionId) {
+        lockLastAdminRule();
         Role role = findRole(roleId);
         Permission permission = findPermission(permissionId);
         if (!role.getPermissions().contains(permission)) {
@@ -182,7 +191,7 @@ public class RbacServiceImpl implements RbacService {
         if (ADMIN_RESOURCE.equals(permission.getResource()) && ADMIN_ACTION.equals(permission.getAction())
                 && userRepository.countByRoleId(roleId) > 0
                 && userRepository.countHoldersExcludingRole(ADMIN_RESOURCE, ADMIN_ACTION, roleId) == 0) {
-            auditLogger.log("PERMISSION_REMOVE_FROM_ROLE_REJECTED", "ROLE", roleId,
+            auditLogger.logRejected("PERMISSION_REMOVE_FROM_ROLE_REJECTED", "ROLE", roleId,
                     "permission " + label(permission) + ": " + LAST_ADMIN);
             throw new BusinessRuleException(LAST_ADMIN);
         }
@@ -220,6 +229,7 @@ public class RbacServiceImpl implements RbacService {
     @Override
     @Transactional
     public PermissionResponse updatePermission(Long id, PermissionRequest request) {
+        lockLastAdminRule();
         Permission permission = findPermission(id);
         String resource = normalize(request.resource());
         String action = normalize(request.action());
@@ -231,7 +241,7 @@ public class RbacServiceImpl implements RbacService {
         boolean wasAdmin = ADMIN_RESOURCE.equals(permission.getResource()) && ADMIN_ACTION.equals(permission.getAction());
         boolean stillAdmin = ADMIN_RESOURCE.equals(resource) && ADMIN_ACTION.equals(action);
         if (wasAdmin && !stillAdmin && userRepository.countHolders(ADMIN_RESOURCE, ADMIN_ACTION) > 0) {
-            auditLogger.log("PERMISSION_UPDATE_REJECTED", "PERMISSION", id, "renaming " + label(permission) + ": " + LAST_ADMIN);
+            auditLogger.logRejected("PERMISSION_UPDATE_REJECTED", "PERMISSION", id, "renaming " + label(permission) + ": " + LAST_ADMIN);
             throw new BusinessRuleException(LAST_ADMIN);
         }
         String previous = label(permission);
@@ -249,7 +259,7 @@ public class RbacServiceImpl implements RbacService {
         // ROLE:WRITE from the last holder either: no separate last-admin check is needed here.
         long roles = roleRepository.countByPermissionId(id);
         if (roles > 0) {
-            auditLogger.log("PERMISSION_DELETE_REJECTED", "PERMISSION", id, "still assigned to " + roles + " role(s)");
+            auditLogger.logRejected("PERMISSION_DELETE_REJECTED", "PERMISSION", id, "still assigned to " + roles + " role(s)");
             throw new BusinessRuleException("Permission " + label(permission) + " is still assigned to " + roles
                     + " role(s); remove it from them first");
         }
@@ -306,5 +316,17 @@ public class RbacServiceImpl implements RbacService {
         return new UserDetailResponse(u.getId(), u.getFirstName(), u.getLastName(), u.getEmail(), u.isEnabled(),
                 u.getRoles().stream().sorted(Comparator.comparing(Role::getId))
                         .map(r -> new UserDetailResponse.RoleSummary(r.getId(), r.getRoleName())).toList());
+    }
+
+    /**
+     * Serialises the operations that can strip the last ROLE:WRITE holder. Each of them counts the
+     * holders and then writes, and two concurrent transactions could each see the other holder still
+     * in place and both commit. A transaction scoped advisory lock makes them queue: it is released
+     * automatically at commit or rollback, so the second one counts after the first has committed.
+     */
+    private void lockLastAdminRule() {
+        entityManager.createNativeQuery("select cast(pg_advisory_xact_lock(?1) as text)")
+                .setParameter(1, LAST_ADMIN_LOCK_KEY)
+                .getResultList();
     }
 }

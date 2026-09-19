@@ -28,18 +28,39 @@ public class AuditLogger {
     JsonWebToken jwt;
 
     /**
-     * Stores one audit row. It runs in its own transaction so that a REJECTED attempt is kept even
-     * though the caller's business transaction is then rolled back by the exception it throws.
+     * Stores the audit row of an operation that succeeded. It joins the caller's transaction, so the
+     * row is committed with the change it describes and vanishes with it if that change is rolled back.
      *
-     * @param action     what happened, for example ROLE_CREATED or ROLE_DELETE_REJECTED
+     * @param action     what happened, for example ROLE_CREATED
+     * @param entityType the kind of entity concerned, for example ROLE
+     * @param entityId   the entity id, or null
+     * @param details    free text with the context
+     */
+    // A plain @Transactional (REQUIRED) joins the transaction of the caller, or starts one if there is
+    // none. A success entry must not outlive a business transaction that later fails.
+    @Transactional
+    public void log(String action, String entityType, Long entityId, String details) {
+        store(action, entityType, entityId, details);
+    }
+
+    /**
+     * Stores the audit row of a REFUSED attempt. It runs in its own transaction so the row is kept
+     * even though the caller's business transaction is then rolled back by the exception it throws.
+     *
+     * @param action     what was refused, for example ROLE_DELETE_REJECTED
      * @param entityType the kind of entity concerned, for example ROLE
      * @param entityId   the entity id, or null
      * @param details    free text with the context
      */
     // Transactional.TxType.REQUIRES_NEW suspends the caller's transaction and commits this insert
-    // independently: a plain @Transactional would join the caller's and vanish with its rollback.
+    // independently. It holds a second connection for a moment, which is acceptable because it only
+    // happens on refusals, not on every mutation.
     @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void log(String action, String entityType, Long entityId, String details) {
+    public void logRejected(String action, String entityType, Long entityId, String details) {
+        store(action, entityType, entityId, details);
+    }
+
+    private void store(String action, String entityType, Long entityId, String details) {
         AuditLog entry = new AuditLog();
         entry.setActorUserId(currentActor());
         entry.setAction(action);
