@@ -313,18 +313,18 @@ Full CRUD for users, roles, and permissions. Assignments always flow in one dire
 
 ### Tasks
 
-- [ ] `Role`, `Permission`, `AuditLog` entities, `RoleRepository`, `PermissionRepository`, `AuditLogRepository`
-- [ ] `RbacService` (interface) + implementation:
+- [x] `Role`, `Permission`, `AuditLog` entities, `RoleRepository`, `PermissionRepository`, `AuditLogRepository`
+- [x] `RbacService` (interface) + implementation:
   - `createRole`/`updateRole`/`deleteRole` - `deleteRole` rejects if any user is still assigned this role (must be unassigned first)
   - `createPermission`/`updatePermission`/`deletePermission` - `deletePermission` rejects if any role still has this permission assigned
   - `assignPermissionToRole`/`removePermissionFromRole` - `removePermissionFromRole` rejects removing `ROLE:WRITE` from a role if doing so would leave **zero** users anywhere holding a role that grants `ROLE:WRITE`
   - `assignRoleToUser`/`removeRoleFromUser` - `removeRoleFromUser` applies the same last-admin check at the point of removal from a specific user, so a self-lockout is caught however it's attempted
-- [ ] `AuditLogger`: a single `log(String action, String entityType, Long entityId, String details)` method, called from every method above - every RBAC mutation is traceable (who did what, to what, when), not just the happy-path ones
-- [ ] `PermissionSecurityIdentityAugmentor` (`SecurityIdentityAugmentor`): after JWT validation, loads the user's roles and permissions, adds each `RESOURCE:ACTION` string to the identity as a `StringPermission`
-- [ ] `UserResource`, `RoleResource`, `PermissionResource`, each method annotated `@PermissionsAllowed("...")` as listed above - `UserResource` only manages role assignment on existing users, it never creates a user directly (registration stays exclusively `feature/auth`'s job)
-- [ ] A seeding step (a `@Observes StartupEvent` method, or a Flyway data-migration): baseline permissions covering every resource/action this project defines, assigned to a seeded `ADMIN` role - without this, nobody could ever be granted `ROLE:WRITE`/`PERMISSION:WRITE` to create the first assignment
-- [ ] `ExpiredTokenCleanupJob` (`@Scheduled(cron = "0 0 3 * * ?")`, `quarkus-scheduler`): daily job deleting `BlacklistedToken`/`ActivationToken`/`PasswordResetToken` rows past their expiry, so both tables stay bounded over time - revocation and expiry checks never depend on the row still existing, so deleting it later is purely housekeeping, not a correctness concern
-- [ ] Tests: full CRUD on roles and permissions, the "still referenced" rejection on both `deleteRole` and `deletePermission`, the augmentor granting the expected permissions for a multi-role user, a `@PermissionsAllowed`-protected endpoint accepting/rejecting correctly, and specifically the last-admin rejection triggered both ways (removing the role from the last user who has it, and removing the permission from the role that was their only source of it), plus an assertion that every mutation above produces a matching `AuditLog` row
+- [x] `AuditLogger`: a single `log(String action, String entityType, Long entityId, String details)` method, called from every method above - every RBAC mutation is traceable (who did what, to what, when), not just the happy-path ones
+- [x] `PermissionSecurityIdentityAugmentor` (`SecurityIdentityAugmentor`): after JWT validation, loads the user's roles and permissions, adds each `RESOURCE:ACTION` string to the identity as a `StringPermission`
+- [x] `UserResource`, `RoleResource`, `PermissionResource`, each method annotated `@PermissionsAllowed("...")` as listed above - `UserResource` only manages role assignment on existing users, it never creates a user directly (registration stays exclusively `feature/auth`'s job)
+- [x] A seeding step (a `@Observes StartupEvent` method, or a Flyway data-migration): baseline permissions covering every resource/action this project defines, assigned to a seeded `ADMIN` role - without this, nobody could ever be granted `ROLE:WRITE`/`PERMISSION:WRITE` to create the first assignment (done as the Flyway migration `V2__seed_baseline_rbac.sql`; an optional `AdminBootstrap` startup observer, active only when `app.bootstrap-admin.email` and `app.bootstrap-admin.password` are set and given dev-only defaults in `%dev`, creates the first administrator, since nobody can otherwise hold `ADMIN`)
+- [x] `ExpiredTokenCleanupJob` (`@Scheduled(cron = "0 0 3 * * ?")`, `quarkus-scheduler`): daily job deleting `BlacklistedToken`/`ActivationToken`/`PasswordResetToken` rows past their expiry, so both tables stay bounded over time - revocation and expiry checks never depend on the row still existing, so deleting it later is purely housekeeping, not a correctness concern
+- [x] Tests: full CRUD on roles and permissions, the "still referenced" rejection on both `deleteRole` and `deletePermission`, the augmentor granting the expected permissions for a multi-role user, a `@PermissionsAllowed`-protected endpoint accepting/rejecting correctly, and specifically the last-admin rejection triggered both ways (removing the role from the last user who has it, and removing the permission from the role that was their only source of it), plus an assertion that every mutation above produces a matching `AuditLog` row
 
 ## feature/categories
 
