@@ -1,0 +1,21 @@
+package com.edgareldy.quarkustutorial.dto.ecommerce;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+/**
+ * Payload to create or update a customer. Telephone, email and address are optional.
+ * <p>
+ * Created edgar.muhamyangabo on 9/19/26
+ * Author : edgar.muhamyangabo
+ * Date : 9/19/26
+ * Project : quarkus-tutorial
+ */
+public record CustomerRequest(
+        @NotBlank @Size(max = 100) String firstName,
+        @NotBlank @Size(max = 100) String lastName,
+        @Size(max = 50) String telephone,
+        @Email @Size(max = 255) String email,
+        @Size(max = 255) String address) {
+}
