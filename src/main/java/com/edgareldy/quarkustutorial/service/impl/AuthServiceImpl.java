@@ -48,10 +48,15 @@ public class AuthServiceImpl implements AuthService {
     private static final Duration RESET_TTL = Duration.ofMinutes(30);
     private static final String INVALID_CREDENTIALS = "Invalid email or password";
     private static final String INVALID_TOKEN = "The token is invalid, expired or already used";
-    private static final SecureRandom RANDOM = new SecureRandom();
     // Computed once: verifying against it burns the same bcrypt time as a real check when the email is
     // unknown, so response timing does not reveal whether an account exists.
     private static final String DUMMY_HASH = BcryptUtil.bcryptHash("timing-equalizer");
+
+    // An instance field, not a static one, on purpose: a static SecureRandom is created while the GraalVM
+    // native image is built, which freezes its seed into the image (and the build refuses it). A field
+    // of an @ApplicationScoped bean is created when the running application starts, so it is seeded
+    // for real at run time, in JVM and native mode alike.
+    private final SecureRandom random = new SecureRandom();
 
     @Inject
     UserRepository userRepository;
@@ -201,9 +206,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /** 256 bits from SecureRandom, URL-safe Base64 without padding. */
-    private static String newRawToken() {
+    private String newRawToken() {
         byte[] bytes = new byte[32];
-        RANDOM.nextBytes(bytes);
+        random.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 

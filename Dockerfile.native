@@ -1,0 +1,30 @@
+# Multi-stage image for the GraalVM native executable.
+# Stage 1 compiles the application to a native binary with Mandrel (Red Hat's GraalVM distribution),
+# stage 2 keeps only that binary on a minimal runtime image: no JVM, no Maven, no sources.
+
+FROM quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21 AS build
+USER root
+WORKDIR /build
+
+# The builder image ships Mandrel but not Maven, so the Maven wrapper is used. Copying the wrapper and
+# the pom alone first lets Docker cache the dependency download until the pom changes.
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+RUN ./mvnw -B -q dependency:go-offline
+
+COPY src ./src
+# -Dnative switches on the pom's native profile. Tests are skipped here: they rely on Dev Services,
+# which needs a Docker daemon a build stage does not have, and they run in CI with mvn verify.
+RUN ./mvnw -B -q package -Dnative -DskipTests
+
+# The runtime image only needs the C libraries the native binary links against.
+FROM quay.io/quarkus/ubi9-quarkus-micro-image:2.0
+WORKDIR /work
+
+# Same idea as Dockerfile.jvm: never run as root.
+COPY --from=build --chown=1001:root --chmod=0755 /build/target/*-runner /work/application
+
+EXPOSE 8080
+USER 1001
+ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]
