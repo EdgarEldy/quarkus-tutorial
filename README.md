@@ -421,11 +421,11 @@ Quarkus lets imperative (blocking, Panache-based) and reactive (Mutiny-based) co
 
 ### Tasks
 
-- [ ] `quarkus-hibernate-reactive-panache`, `quarkus-reactive-pg-client` added alongside the existing blocking `quarkus-jdbc-postgresql` stack - both drivers coexist against the same PostgreSQL database, Dev Services provisions the container either way
-- [ ] `OrderPanacheRepositoryReactive` (`PanacheRepositoryBase` from the reactive variant), used only by the streaming endpoint - the rest of `feature/orders`' blocking repository and service stay untouched
-- [ ] A CDI event or a `Multi`-backed broadcast: `OrderServiceImpl.create` (blocking) publishes a plain CDI event after a successful commit; a reactive listener adapts that into a `Multi<Order>` that the streaming endpoint subscribes to
-- [ ] `OrderResource.stream()`: returns `Multi<Order>` with `@Produces(MediaType.SERVER_SENT_EVENTS)` - no manual thread management, Mutiny's operators handle backpressure
-- [ ] Tests: a `Multi` assertion subscriber (`AssertSubscriber`) verifying an event arrives on the stream after a `POST /api/v1/orders`, run without blocking the test thread
+- [x] `quarkus-hibernate-reactive-panache`, `quarkus-reactive-pg-client` added alongside the existing blocking `quarkus-jdbc-postgresql` stack - both drivers coexist against the same PostgreSQL database, Dev Services provisions the container either way
+- [x] `OrderPanacheRepositoryReactive` (`PanacheRepositoryBase` from the reactive variant), used only by the streaming endpoint - the rest of `feature/orders`' blocking repository and service stay untouched
+- [x] A CDI event or a `Multi`-backed broadcast: `OrderServiceImpl.create` (blocking) publishes a plain CDI event after a successful commit; a reactive listener adapts that into a `Multi<Order>` that the streaming endpoint subscribes to
+- [x] `OrderResource.stream()`: returns `Multi<Order>` with `@Produces(MediaType.SERVER_SENT_EVENTS)` - no manual thread management, Mutiny's operators handle backpressure
+- [x] Tests: a `Multi` assertion subscriber (`AssertSubscriber`) verifying an event arrives on the stream after a `POST /api/v1/orders`, run without blocking the test thread
 
 ## Order of work
 
