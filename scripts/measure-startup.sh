@@ -14,12 +14,19 @@ port=${PORT:-8090}
 requests=${REQUESTS:-300}
 log="target/measure-${label}.log"
 
-"$@" -Dquarkus.http.port="$port" >"$log" 2>&1 &
+# An environment variable works for a jar and for a native binary alike; a -D option placed after
+# "-jar" would be handed to the program instead of the JVM and silently ignored.
+QUARKUS_HTTP_PORT="$port" "$@" >"$log" 2>&1 &
 pid=$!
 trap 'kill "$pid" 2>/dev/null || true' EXIT
 
 start=$(date +%s%N)
 until curl -sf "http://localhost:${port}/q/health/ready" >/dev/null; do
+  if [ $(( ($(date +%s%N) - start) / 1000000000 )) -gt 120 ]; then
+    echo "The application was not ready after 120 s:" >&2
+    tail -n 40 "$log" >&2
+    exit 1
+  fi
   if ! kill -0 "$pid" 2>/dev/null; then
     echo "The application exited before becoming ready:" >&2
     tail -n 40 "$log" >&2
