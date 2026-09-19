@@ -5,6 +5,9 @@ import com.edgareldy.quarkustutorial.dto.common.PageResponse;
 import com.edgareldy.quarkustutorial.dto.ecommerce.OrderRequest;
 import com.edgareldy.quarkustutorial.dto.ecommerce.OrderResponse;
 import com.edgareldy.quarkustutorial.service.OrderService;
+import com.edgareldy.quarkustutorial.service.impl.OrderEventBroadcaster;
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.mutiny.Multi;
 import io.quarkus.security.PermissionsAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -21,6 +24,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.jboss.resteasy.reactive.ResponseStatus;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
  * Endpoints to list, read and place orders, with optional customer and product filters on the list.
@@ -46,6 +50,26 @@ public class OrderResource {
             @QueryParam("customerId") Long customerId,
             @QueryParam("productId") Long productId) {
         return ApiResponse.success(orderService.list(page, size, customerId, productId), "Orders");
+    }
+
+    @Inject
+    OrderEventBroadcaster broadcaster;
+
+    // Server-Sent Events: one long-lived HTTP response, one event per new order. Returning a Mutiny
+    // Multi is enough, Quarkus REST subscribes, honours backpressure and writes each item as it arrives
+    // (no manual thread handling). The ApiResponse envelope does not apply to a stream of events, each
+    // element is a bare OrderResponse. The literal segment "stream" wins over the "/{id}" template.
+    @GET
+    @Path("/stream")
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    // @Blocking only concerns the request pipeline: the JWT blacklist filter runs a JDBC query, which
+    // is forbidden on the event loop where a Multi endpoint would otherwise be dispatched. The stream
+    // itself stays fully reactive.
+    @Blocking
+    @PermissionsAllowed("ORDER:READ")
+    public Multi<OrderResponse> stream() {
+        return broadcaster.stream();
     }
 
     @GET
