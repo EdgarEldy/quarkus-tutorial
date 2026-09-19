@@ -20,7 +20,14 @@ import jakarta.ws.rs.core.MediaType;
 @Path("/test-support")
 public class ThrowingTestResource {
 
-    /** Request body with a mandatory field, used to trigger Bean Validation. */
+    /**
+     * Request body with a mandatory field, used to trigger Bean Validation.
+     * <p>
+     * Created edgar.muhamyangabo on 9/19/26
+     * Author : edgar.muhamyangabo
+     * Date : 9/19/26
+     * Project : quarkus-tutorial
+     */
     public record Payload(@NotBlank String name) {
     }
 
