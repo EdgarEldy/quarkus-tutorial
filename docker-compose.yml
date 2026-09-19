@@ -8,6 +8,9 @@
 #        mkdir -p keys
 #        openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out keys/privateKey.pem
 #        openssl pkey -in keys/privateKey.pem -pubout -out keys/publicKey.pem
+#        chmod 644 keys/*.pem
+#      The container runs as an unprivileged user whose uid differs from yours, so the keys must
+#      be readable by others. The keys directory is ignored by git and mounted read-only.
 
 services:
   db:
