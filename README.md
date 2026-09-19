@@ -404,10 +404,10 @@ Depends on `feature/categories` existing, since every product references one.
 
 ### Tasks
 
-- [ ] `Dockerfile.native` (multi-stage: GraalVM builder image, minimal runtime image)
-- [ ] Build a native executable locally (`mvn package -Dnative -Dquarkus.native.container-build=true`, container build so a local GraalVM install isn't required)
-- [ ] Measure and document, in this branch's own notes: startup time and resident memory of the JVM-mode application versus the native executable, under the same request load
-- [ ] `.github/workflows/ci.yml` extended with a native build verification job (can be slower/separate from the main test job)
+- [x] `Dockerfile.native` (multi-stage: GraalVM builder image, minimal runtime image)
+- [x] Build a native executable locally (`mvn package -Dnative -Dquarkus.native.container-build=true`, container build so a local GraalVM install isn't required). Built and run by the CI job, since the local Docker VM (1.4 GiB) is too small for it, see `docs/native-build.md`
+- [x] Measure and document, in this branch's own notes (`docs/native-build.md`): startup time and resident memory of the JVM-mode application versus the native executable, under the same request load
+- [x] `.github/workflows/ci.yml` extended with a native build verification job (can be slower/separate from the main test job)
 
 ## feature/reactive-endpoints (bonus)
 
