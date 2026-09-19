@@ -1,5 +1,4 @@
+# Keep the build context small and free of local files
 *
-!target/*-runner
-!target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+!pom.xml
+!src/

@@ -81,7 +81,7 @@ Three everyday Quarkus mechanics this tutorial relies on throughout, worth under
 
 | Component | Choice |
 |---|---|
-| Framework | Quarkus 3.30.x (LTS stream) |
+| Framework | Quarkus 3.33.x (LTS stream) |
 | Language | Java 21 (LTS) |
 | Build | Maven |
 | REST layer | Quarkus REST (`quarkus-rest`, `quarkus-rest-jackson`) - the current name for what was previously branded "RESTEasy Reactive" |
@@ -220,7 +220,7 @@ public record ApiResponse<T>(
 
 **Errors**: every non-2xx response is a **Problem Details** document (RFC 9457, which obsoletes RFC 7807 - same `application/problem+json` wire format), produced by the `quarkus-http-problem` Quarkiverse extension rather than a hand-written `ExceptionMapper`.
 
-- `ResourceNotFoundException` and `BusinessRuleException` extend `io.quarkiverse.resteasy.problem.HttpProblem` directly and are thrown normally from a service method - `HttpProblem` already *is* a `RuntimeException`, built via its own builder (`.withTitle(...)`, `.withStatus(...)`, `.withDetail(...)`), so there's no separate DTO and no manual mapping step for these two
+- `ResourceNotFoundException` and `BusinessRuleException` extend `io.quarkiverse.httpproblem.HttpProblem` directly and are thrown normally from a service method - `HttpProblem` already *is* a `RuntimeException`, built via its own builder (`.withTitle(...)`, `.withStatus(...)`, `.withDetail(...)`), so there's no separate DTO and no manual mapping step for these two
 - `quarkus-http-problem` ships its own built-in mappers for the exceptions a project doesn't throw on purpose: Bean Validation failures become a Problem with a `violations` extension listing each field, and anything unmapped becomes a generic 500 Problem with implementation details stripped out before the response is sent - both without a single line of this project's own code
 - A response's `type`/`title`/`status`/`detail` fields carry what an `ApiResponse<Void>` used to carry in `message`, and any structured, field-level detail (like a validation error list) rides in the same document's `extensions` rather than a nested `data`
 
@@ -251,16 +251,16 @@ Example error response (`GET /api/v1/products/999` on a missing product):
 
 ### Tasks
 
-- [ ] Generate the project (`mvn io.quarkus:quarkus-maven-plugin:create`, or code.quarkus.io), Java 21, Maven
-- [ ] Extensions: `quarkus-rest`, `quarkus-rest-jackson`, `quarkus-hibernate-orm-panache`, `quarkus-jdbc-postgresql`, `quarkus-flyway`, `quarkus-hibernate-validator`, `quarkus-smallrye-jwt`, `quarkus-smallrye-jwt-build`, `quarkus-security`, `quarkus-smallrye-openapi`, `quarkus-smallrye-health`, `quarkus-cache`, `quarkus-scheduler`, `io.quarkiverse.resteasy.problem:quarkus-http-problem`
-- [ ] A custom `@Readiness` check (`DatabaseHealthCheck`, verifying a real connection can be obtained) alongside the default one `quarkus-smallrye-health` already provides, and a custom `@Liveness` check confirming the application isn't in a stuck state - both visible at `/q/health`, and individually at `/q/health/ready`/`/q/health/live`
-- [ ] Test extensions: `quarkus-junit5`, `rest-assured`
-- [ ] `ApiResponse<T>`, `PageResponse<T>`
-- [ ] `ResourceNotFoundException`, `BusinessRuleException` (both extending `HttpProblem`, built via its builder with the appropriate status/title); `quarkus-http-problem` configuration (base `type` URI prefix, whether stack traces are ever included - never in `%prod`)
-- [ ] Flyway script `V1__init_schema.sql` (all tables from both domains)
-- [ ] `application.properties`: JWT signing key location, Flyway enabled, `%test`/`%dev` profiles left without a configured datasource (Dev Services provisions PostgreSQL automatically), `%prod` profile with a real connection string
-- [ ] `docker-compose.yml` (app + PostgreSQL, for the packaged application only - not used in dev/test), `Dockerfile.jvm`
-- [ ] `.github/workflows/ci.yml`: `mvn verify` (Dev Services provisions PostgreSQL inside the CI runner automatically, same as locally)
+- [x] Generate the project (`mvn io.quarkus:quarkus-maven-plugin:create`, or code.quarkus.io), Java 21, Maven
+- [x] Extensions: `quarkus-rest`, `quarkus-rest-jackson`, `quarkus-hibernate-orm-panache`, `quarkus-jdbc-postgresql`, `quarkus-flyway`, `quarkus-hibernate-validator`, `quarkus-smallrye-jwt`, `quarkus-smallrye-jwt-build`, `quarkus-security`, `quarkus-smallrye-openapi`, `quarkus-smallrye-health`, `quarkus-cache`, `quarkus-scheduler`, `io.quarkiverse.httpproblem:quarkus-http-problem`
+- [x] A custom `@Readiness` check (`DatabaseHealthCheck`, verifying a real connection can be obtained) alongside the default one `quarkus-smallrye-health` already provides, and a custom `@Liveness` check confirming the application isn't in a stuck state - both visible at `/q/health`, and individually at `/q/health/ready`/`/q/health/live`
+- [x] Test extensions: `quarkus-junit`, `quarkus-junit-mockito`, `rest-assured`
+- [x] `ApiResponse<T>`, `PageResponse<T>`
+- [x] `ResourceNotFoundException`, `BusinessRuleException` (both extending `HttpProblem`, built via its builder with the appropriate status/title); the problem `type` URI is a constant on each exception (this version of `quarkus-http-problem` has no type prefix option) and stack traces are never included in a response, in any profile
+- [x] Flyway script `V1__init_schema.sql` (all tables from both domains)
+- [x] `application.properties`: JWT signing key location, Flyway enabled, `%test`/`%dev` profiles left without a configured datasource (Dev Services provisions PostgreSQL automatically), `%prod` profile with a real connection string
+- [x] `docker-compose.yml` (app + PostgreSQL, for the packaged application only - not used in dev/test), `Dockerfile.jvm`
+- [x] `.github/workflows/ci.yml`: `mvn verify` (Dev Services provisions PostgreSQL inside the CI runner automatically, same as locally)
 
 ## feature/auth
 
