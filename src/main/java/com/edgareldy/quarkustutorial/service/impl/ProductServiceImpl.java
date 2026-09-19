@@ -8,6 +8,7 @@ import com.edgareldy.quarkustutorial.entity.Product;
 import com.edgareldy.quarkustutorial.exception.BusinessRuleException;
 import com.edgareldy.quarkustutorial.exception.ResourceNotFoundException;
 import com.edgareldy.quarkustutorial.repository.CategoryRepository;
+import com.edgareldy.quarkustutorial.repository.OrderRepository;
 import com.edgareldy.quarkustutorial.repository.ProductRepository;
 import com.edgareldy.quarkustutorial.service.ProductService;
 import io.quarkus.cache.CacheInvalidate;
@@ -35,6 +36,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Inject
     CategoryRepository categoryRepository;
+
+    @Inject
+    OrderRepository orderRepository;
 
     @Override
     @Transactional
@@ -83,7 +87,11 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @CacheInvalidate(cacheName = "product-cache")
     public void delete(@CacheKey Long id) {
-        productRepository.delete(find(id));
+        Product product = find(id);
+        if (orderRepository.countByProductId(id) > 0) {
+            throw new BusinessRuleException("Product " + id + " is still referenced by orders and cannot be deleted");
+        }
+        productRepository.delete(product);
     }
 
     private Product find(Long id) {
