@@ -278,15 +278,15 @@ Example error response (`GET /api/v1/products/999` on a missing product):
 
 ### Tasks
 
-- [ ] `User` entity, `ActivationToken`, `BlacklistedToken`, `PasswordResetToken`
-- [ ] `UserRepository` (`PanacheRepository<User>`)
-- [ ] `AuthService` (interface) + implementation: registration, activation, login (password hashing/verification via `io.quarkus.elytron.security.common.BcryptUtil.bcryptHash`/`matches`, from `quarkus-elytron-security-common` - already on the classpath via `quarkus-security`, not an external library), logout, forgot/reset password
-- [ ] `forgotPassword` returns the exact same response - same status code, same body, roughly the same timing (no early return skipping the token-generation work) - whether or not the submitted email matches an existing account, so the endpoint can't be used to enumerate registered emails
-- [ ] `JwtIssuer`: builds a signed JWT (`io.smallrye.jwt.build.Jwt`) with a unique `jti` claim, the user's id as subject
-- [ ] `@SecurityScheme(securitySchemeName = "jwt", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")` declared once (e.g. on `AuthResource` or a dedicated `OpenApiConfig` class) and referenced via `@SecurityRequirement(name = "jwt")` on protected resources, so Swagger UI's "Authorize" button actually works against `@PermissionsAllowed`-protected endpoints
-- [ ] A `ContainerRequestFilter` (or `SecurityIdentityAugmentor`, same class introduced fully in `feature/rbac`) checking the incoming JWT's `jti` against `BlacklistedToken` and rejecting the request if found
-- [ ] `AuthResource`
-- [ ] Tests (`@QuarkusTest` + RestAssured): register → activate → login → access `/me`, logout followed by a rejected request with the same token, forgot/reset password flow
+- [x] `User` entity, `ActivationToken`, `BlacklistedToken`, `PasswordResetToken`
+- [x] `UserRepository` (`PanacheRepository<User>`)
+- [x] `AuthService` (interface) + implementation: registration, activation, login (password hashing/verification via `io.quarkus.elytron.security.common.BcryptUtil.bcryptHash`/`matches`, from `quarkus-elytron-security-common`, a Quarkus module declared explicitly in the pom because `quarkus-security` does not bring it in, not an external library), logout, forgot/reset password
+- [x] `forgotPassword` returns the exact same response - same status code, same body, roughly the same timing (no early return skipping the token-generation work) - whether or not the submitted email matches an existing account, so the endpoint can't be used to enumerate registered emails
+- [x] `JwtIssuer`: builds a signed JWT (`io.smallrye.jwt.build.Jwt`) with a unique `jti` claim, the user's id as subject
+- [x] `@SecurityScheme(securitySchemeName = "jwt", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")` declared once (e.g. on `AuthResource` or a dedicated `OpenApiConfig` class) and referenced via `@SecurityRequirement(name = "jwt")` on protected resources, so Swagger UI's "Authorize" button actually works against `@PermissionsAllowed`-protected endpoints
+- [x] A `ContainerRequestFilter` (or `SecurityIdentityAugmentor`, same class introduced fully in `feature/rbac`) checking the incoming JWT's `jti` against `BlacklistedToken` and rejecting the request if found
+- [x] `AuthResource`
+- [x] Tests (`@QuarkusTest` + RestAssured): register → activate → login → access `/me`, logout followed by a rejected request with the same token, forgot/reset password flow
 
 ## feature/rbac
 
