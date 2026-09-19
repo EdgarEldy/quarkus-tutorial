@@ -71,6 +71,15 @@ class ProductServiceImplTest {
     }
 
     @Test
+    void createScalesThePriceLikeTheDatabaseColumn() {
+        when(categoryRepository.findById(1L)).thenReturn(category(1L));
+
+        ProductResponse response = service.create(new ProductRequest(1L, "Pen", new BigDecimal("10.5")));
+
+        assertEquals(new BigDecimal("10.50"), response.unitPrice());
+    }
+
+    @Test
     void createPersistsAndMapsResponse() {
         when(categoryRepository.findById(1L)).thenReturn(category(1L));
 
