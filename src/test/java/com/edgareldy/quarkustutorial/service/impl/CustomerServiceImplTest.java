@@ -8,8 +8,10 @@ import com.edgareldy.quarkustutorial.dto.common.PageResponse;
 import com.edgareldy.quarkustutorial.dto.ecommerce.CustomerRequest;
 import com.edgareldy.quarkustutorial.dto.ecommerce.CustomerResponse;
 import com.edgareldy.quarkustutorial.entity.Customer;
+import com.edgareldy.quarkustutorial.exception.BusinessRuleException;
 import com.edgareldy.quarkustutorial.exception.ResourceNotFoundException;
 import com.edgareldy.quarkustutorial.repository.CustomerRepository;
+import com.edgareldy.quarkustutorial.repository.OrderRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -31,13 +33,16 @@ import org.mockito.ArgumentCaptor;
 class CustomerServiceImplTest {
 
     private CustomerRepository repository;
+    private OrderRepository orderRepository;
     private CustomerServiceImpl service;
 
     @BeforeEach
     void setUp() {
         repository = mock(CustomerRepository.class);
         service = new CustomerServiceImpl();
+        orderRepository = mock(OrderRepository.class);
         service.customerRepository = repository;
+        service.orderRepository = orderRepository;
     }
 
     private static Customer customer(Long id, String first) {
@@ -113,6 +118,16 @@ class CustomerServiceImplTest {
         service.delete(1L);
 
         verify(repository).delete(c);
+    }
+
+    @Test
+    void deleteIsRefusedWhileOrdersReferenceTheCustomer() {
+        Customer c = customer(1L, "Ada");
+        when(repository.findById(1L)).thenReturn(c);
+        when(orderRepository.countByCustomerId(1L)).thenReturn(2L);
+
+        assertThrows(BusinessRuleException.class, () -> service.delete(1L));
+        verify(repository, never()).delete(any(Customer.class));
     }
 
     @Test

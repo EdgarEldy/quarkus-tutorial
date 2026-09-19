@@ -396,9 +396,9 @@ Depends on `feature/categories` existing, since every product references one.
 
 ### Tasks
 
-- [ ] `Order` entity, repository, contract/implementation service: computes `total = quantity * product.unitPrice`
-- [ ] `OrderResource`
-- [ ] Tests, including the total computation
+- [x] `Order` entity, repository, contract/implementation service: computes `total = quantity * product.unitPrice`
+- [x] `OrderResource`
+- [x] Tests, including the total computation
 
 ## feature/native-build (bonus)
 
