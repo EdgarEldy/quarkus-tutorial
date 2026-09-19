@@ -138,8 +138,13 @@ public class AuthServiceImpl implements AuthService {
         if (blacklistedTokenRepository.existsByJti(jti)) {
             return;
         }
+        User user = userRepository.findById(userId);
+        if (user == null) {
+            // The token is valid but its account was deleted since: treat it as an invalid credential.
+            throw new AuthenticationFailedException("The token no longer matches an account");
+        }
         BlacklistedToken entry = new BlacklistedToken();
-        entry.setUser(userRepository.findById(userId));
+        entry.setUser(user);
         entry.setToken(jti);
         entry.setJti(jti);
         entry.setBlacklistedAt(Instant.now());
@@ -161,7 +166,9 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void forgotPassword(String email) {
         User user = userRepository.findByEmail(email).orElse(null);
-        // Same work whether or not the account exists (no early return): generate and hash a token.
+        // The token is generated and hashed whether or not the account exists, so the answer does not
+        // depend on it and the cryptographic work is identical. The database writes only happen for a
+        // real account, which leaves a small residual timing difference that the specification accepts.
         String rawToken = newRawToken();
         String hash = sha256Hex(rawToken);
         if (user == null) {
