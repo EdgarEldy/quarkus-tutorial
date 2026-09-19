@@ -194,6 +194,33 @@ public class RbacTestSupport {
     }
 
     /**
+     * Sets the enabled and locked flags of a user directly in the database.
+     *
+     * @param userId  the user id
+     * @param enabled the enabled flag
+     * @param locked  the account locked flag
+     */
+    public void setStatus(Long userId, boolean enabled, boolean locked) {
+        QuarkusTransaction.requiringNew().run(() -> {
+            User user = userRepository.findById(userId);
+            user.setEnabled(enabled);
+            user.setAccountLocked(locked);
+        });
+    }
+
+    /**
+     * @return how many enabled, unlocked users currently hold a role granting ROLE:WRITE
+     */
+    public long countActiveRoleWriteHolders() {
+        return QuarkusTransaction.requiringNew().call(() -> ((Number) em.createNativeQuery(
+                "select count(distinct u.id) from users u join role_user ru on ru.user_id = u.id "
+                        + "join role_permission rp on rp.role_id = ru.role_id "
+                        + "join permissions p on p.id = rp.permission_id "
+                        + "where p.resource = 'ROLE' and p.action = 'WRITE' and u.enabled = true "
+                        + "and u.account_locked = false").getSingleResult()).longValue());
+    }
+
+    /**
      * Makes sure a role created through the API is deleted by cleanup().
      *
      * @param roleId the role id
