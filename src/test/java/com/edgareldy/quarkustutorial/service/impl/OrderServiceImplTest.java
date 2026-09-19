@@ -17,6 +17,8 @@ import com.edgareldy.quarkustutorial.repository.OrderRepository;
 import com.edgareldy.quarkustutorial.repository.ProductRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import com.edgareldy.quarkustutorial.service.event.OrderCreatedEvent;
+import jakarta.enterprise.event.Event;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,13 +41,16 @@ class OrderServiceImplTest {
     private CustomerRepository customerRepository;
     private ProductRepository productRepository;
     private OrderServiceImpl service;
+    private Event<OrderCreatedEvent> orderCreatedEvent;
 
     @BeforeEach
     void setUp() {
         orderRepository = mock(OrderRepository.class);
         customerRepository = mock(CustomerRepository.class);
         productRepository = mock(ProductRepository.class);
+        orderCreatedEvent = mock(Event.class);
         service = new OrderServiceImpl();
+        service.orderCreatedEvent = orderCreatedEvent;
         service.orderRepository = orderRepository;
         service.customerRepository = customerRepository;
         service.productRepository = productRepository;
