@@ -4,8 +4,10 @@ import com.edgareldy.quarkustutorial.dto.common.PageResponse;
 import com.edgareldy.quarkustutorial.dto.ecommerce.CustomerRequest;
 import com.edgareldy.quarkustutorial.dto.ecommerce.CustomerResponse;
 import com.edgareldy.quarkustutorial.entity.Customer;
+import com.edgareldy.quarkustutorial.exception.BusinessRuleException;
 import com.edgareldy.quarkustutorial.exception.ResourceNotFoundException;
 import com.edgareldy.quarkustutorial.repository.CustomerRepository;
+import com.edgareldy.quarkustutorial.repository.OrderRepository;
 import com.edgareldy.quarkustutorial.service.CustomerService;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -27,6 +29,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Inject
     CustomerRepository customerRepository;
+
+    @Inject
+    OrderRepository orderRepository;
 
     @Override
     @Transactional
@@ -62,7 +67,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void delete(Long id) {
-        customerRepository.delete(find(id));
+        Customer customer = find(id);
+        if (orderRepository.countByCustomerId(id) > 0) {
+            throw new BusinessRuleException("Customer " + id + " still has orders and cannot be deleted");
+        }
+        customerRepository.delete(customer);
     }
 
     private Customer find(Long id) {
