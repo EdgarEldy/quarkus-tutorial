@@ -14,6 +14,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 
 /**
  * Bridges the blocking order creation to the reactive world: turns committed-order CDI events into a
@@ -33,6 +34,8 @@ public class OrderEventBroadcaster {
     // replayed to late subscribers). serialized() makes concurrent onNext calls from different
     // request threads safe.
     private final SerializedProcessor<Long, Long> processor = BroadcastProcessor.<Long>create().serialized();
+
+    private static final Logger LOG = Logger.getLogger(OrderEventBroadcaster.class);
 
     @Inject
     OrderPanacheRepositoryReactive orderRepository;
@@ -70,7 +73,11 @@ public class OrderEventBroadcaster {
         // Opens a reactive session on the named "reactive" persistence unit for the duration of the
         // lookup (the no-argument variant would look for the default unit, which is blocking).
         return Panache.withSession("reactive", () -> orderRepository.findById(id))
-                .map(order -> new OrderResponse(order.getId(), order.getCustomerId(), order.getProductId(),
-                        order.getQuantity(), order.getTotal()));
+                // A missing row (null) is simply skipped by the stream, and a failed reload is logged and
+                // dropped: one bad element must not terminate the whole subscription for that client.
+                .onItem().ifNotNull().transform(order -> new OrderResponse(order.getId(), order.getCustomerId(),
+                        order.getProductId(), order.getQuantity(), order.getTotal()))
+                .onFailure().invoke(e -> LOG.warnf(e, "Could not reload order %d for the stream", id))
+                .onFailure().recoverWithNull();
     }
 }
