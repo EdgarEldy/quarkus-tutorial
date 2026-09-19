@@ -27,6 +27,9 @@ class CategoryRepositoryTest {
     CategoryRepository repository;
 
     @Inject
+    ProductRepository productRepository;
+
+    @Inject
     EntityManager em;
 
     private Long categoryId;
@@ -63,7 +66,7 @@ class CategoryRepositoryTest {
     @Test
     void countProductsReflectsInsertedRows() {
         categoryId = persist("Repo count");
-        assertEquals(0L, QuarkusTransaction.requiringNew().call(() -> repository.countProducts(categoryId)));
+        assertEquals(0L, QuarkusTransaction.requiringNew().call(() -> productRepository.countByCategoryId(categoryId)));
 
         QuarkusTransaction.requiringNew().run(() -> {
             for (int i = 0; i < 3; i++) {
@@ -72,6 +75,6 @@ class CategoryRepositoryTest {
             }
         });
 
-        assertEquals(3L, QuarkusTransaction.requiringNew().call(() -> repository.countProducts(categoryId)));
+        assertEquals(3L, QuarkusTransaction.requiringNew().call(() -> productRepository.countByCategoryId(categoryId)));
     }
 }

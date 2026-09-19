@@ -7,6 +7,7 @@ import com.edgareldy.quarkustutorial.entity.Category;
 import com.edgareldy.quarkustutorial.exception.BusinessRuleException;
 import com.edgareldy.quarkustutorial.exception.ResourceNotFoundException;
 import com.edgareldy.quarkustutorial.repository.CategoryRepository;
+import com.edgareldy.quarkustutorial.repository.ProductRepository;
 import com.edgareldy.quarkustutorial.service.CategoryService;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -28,6 +29,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Inject
     CategoryRepository categoryRepository;
+
+    @Inject
+    ProductRepository productRepository;
 
     @Override
     @Transactional
@@ -64,7 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void delete(Long id) {
         Category category = find(id);
-        if (categoryRepository.countProducts(id) > 0) {
+        if (productRepository.countByCategoryId(id) > 0) {
             throw new BusinessRuleException("Category " + id + " still has products and cannot be deleted");
         }
         categoryRepository.delete(category);

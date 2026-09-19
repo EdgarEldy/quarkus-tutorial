@@ -361,10 +361,10 @@ Depends on `feature/categories` existing, since every product references one.
 
 ### Tasks
 
-- [ ] `Product` entity, repository, contract/implementation service
-- [ ] `ProductService.findById` annotated `@CacheResult(cacheName = "product-cache")`; `ProductServiceImpl.update`/`delete` annotated `@CacheInvalidate(cacheName = "product-cache")` on the same key - a product read hits Panache once and the cache for every subsequent read until it's changed, and every write explicitly clears its own entry rather than leaving a stale cached value silently served
-- [ ] `ProductResource`
-- [ ] Tests, including the category filter, a permission-denied case, and a cache test asserting a second read doesn't hit the repository while an update correctly invalidates the entry
+- [x] `Product` entity, repository, contract/implementation service
+- [x] `ProductServiceImpl.findById` annotated `@CacheResult(cacheName = "product-cache")`; `ProductServiceImpl.update`/`delete` annotated `@CacheInvalidate(cacheName = "product-cache")` on the same key (`@CacheKey` on the id) - a product read hits Panache once and the cache for every subsequent read until it's changed, and every write explicitly clears its own entry rather than leaving a stale cached value silently served. The annotations sit on the implementation class, not on the `ProductService` interface: ArC does not apply interceptor bindings declared on an interface method
+- [x] `ProductResource`
+- [x] Tests, including the category filter, a permission-denied case, and a cache test asserting a second read doesn't hit the repository while an update correctly invalidates the entry
 
 ## feature/customers
 
