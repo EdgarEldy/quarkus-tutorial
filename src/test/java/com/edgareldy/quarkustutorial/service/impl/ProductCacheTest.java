@@ -91,7 +91,7 @@ class ProductCacheTest {
     }
 
     @Test
-    void secondReadIsServedFromCache() {
+    void _01_ShouldServeFromCache_WhenProductReadTwice() {
         Long id = create("Cached", "5.00").id();
         Mockito.clearInvocations(productRepository);
 
@@ -103,7 +103,7 @@ class ProductCacheTest {
     }
 
     @Test
-    void updateEvictsEntryAndNextReadReloadsFreshData() {
+    void _02_ShouldReloadFreshData_WhenProductUpdated() {
         Long id = create("Before", "5.00").id();
         assertEquals("Before", service.findById(id).productName());
 
@@ -120,7 +120,7 @@ class ProductCacheTest {
     }
 
     @Test
-    void deleteEvictsEntryAndNextReadIsNotFound() {
+    void _03_ShouldThrowNotFoundOnNextRead_WhenProductDeleted() {
         Long id = create("Doomed", "5.00").id();
         service.findById(id);
 
@@ -130,7 +130,7 @@ class ProductCacheTest {
     }
 
     @Test
-    void notFoundIsNotCached() {
+    void _04_ShouldNotCacheNotFound_WhenProductMissing() {
         assertThrows(ResourceNotFoundException.class, () -> service.findById(999999999L));
         assertThrows(ResourceNotFoundException.class, () -> service.findById(999999999L));
 
@@ -138,7 +138,7 @@ class ProductCacheTest {
     }
 
     @Test
-    void createThenReadWorksAndIsCached() {
+    void _05_ShouldCacheProduct_WhenCreatedThenRead() {
         Long id = create("Fresh", "7.25").id();
         Mockito.clearInvocations(productRepository);
 

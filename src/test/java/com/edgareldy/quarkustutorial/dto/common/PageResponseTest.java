@@ -15,19 +15,19 @@ import org.junit.jupiter.api.Test;
 class PageResponseTest {
 
     @Test
-    void totalPagesUsesCeilingDivision() {
+    void _01_ShouldUseCeilingDivision_WhenComputingTotalPages() {
         assertEquals(3, PageResponse.of(List.of(1, 2, 3), 0, 3, 7).totalPages());
         assertEquals(2, PageResponse.of(List.of(1, 2, 3), 0, 3, 6).totalPages());
         assertEquals(1, PageResponse.of(List.of(1), 0, 10, 1).totalPages());
     }
 
     @Test
-    void sizeZeroYieldsZeroPagesWithoutDividingByZero() {
+    void _02_ShouldYieldZeroPages_WhenSizeIsZero() {
         assertEquals(0, PageResponse.of(List.of(), 0, 0, 5).totalPages());
     }
 
     @Test
-    void emptyContentYieldsZeroPages() {
+    void _03_ShouldYieldZeroPages_WhenContentIsEmpty() {
         PageResponse<String> page = PageResponse.of(List.of(), 0, 10, 0);
         assertEquals(0, page.totalPages());
         assertTrue(page.content().isEmpty());
@@ -35,7 +35,7 @@ class PageResponseTest {
     }
 
     @Test
-    void keepsPassedValues() {
+    void _04_ShouldKeepPassedValues_WhenBuilt() {
         PageResponse<Integer> page = PageResponse.of(List.of(4, 5), 2, 2, 6);
         assertEquals(2, page.page());
         assertEquals(2, page.size());

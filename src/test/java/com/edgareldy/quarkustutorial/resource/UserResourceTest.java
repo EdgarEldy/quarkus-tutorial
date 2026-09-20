@@ -41,7 +41,7 @@ class UserResourceTest {
     }
 
     @Test
-    void listIsPaginatedInsideTheEnvelope() {
+    void _01_ShouldPaginateInsideEnvelope_WhenListingUsers() {
         support.createUser();
         support.createUser();
         given().auth().oauth2(admin).queryParam("page", 0).queryParam("size", 2).when().get(BASE)
@@ -56,7 +56,7 @@ class UserResourceTest {
     }
 
     @Test
-    void invalidPagingIs400Problem() {
+    void _02_ShouldReturn400Problem_WhenPagingIsInvalid() {
         given().auth().oauth2(admin).queryParam("size", 0).when().get(BASE)
                 .then().statusCode(400).contentType(PROBLEM_JSON).body("status", is(400))
                 .body("$", not(hasKey("success")));
@@ -67,7 +67,7 @@ class UserResourceTest {
     }
 
     @Test
-    void detailIncludesAssignedRoles() {
+    void _03_ShouldIncludeAssignedRoles_WhenReadingUserDetail() {
         TestUser target = support.createUser("ADMIN");
         given().auth().oauth2(admin).when().get(BASE + "/" + target.id())
                 .then().statusCode(200)
@@ -78,13 +78,13 @@ class UserResourceTest {
     }
 
     @Test
-    void unknownUserIs404Problem() {
+    void _04_ShouldReturn404Problem_WhenUserUnknown() {
         given().auth().oauth2(admin).when().get(BASE + "/999999999")
                 .then().statusCode(404).contentType(PROBLEM_JSON).body("title", is("Resource Not Found"));
     }
 
     @Test
-    void assignThenRemoveRole() {
+    void _05_ShouldAssignThenRemoveRole_WhenManagingUserRoles() {
         Long roleId = support.createRole(RbacTestSupport.unique("plain"));
         TestUser target = support.createUser();
         given().auth().oauth2(admin).when().patch(BASE + "/" + target.id() + "/roles/" + roleId)
@@ -99,7 +99,7 @@ class UserResourceTest {
     }
 
     @Test
-    void assignWithUnknownUserOrRoleIs404() {
+    void _06_ShouldReturn404_WhenAssigningWithUnknownUserOrRole() {
         TestUser target = support.createUser();
         given().auth().oauth2(admin).when().patch(BASE + "/999999999/roles/" + support.roleId("ADMIN"))
                 .then().statusCode(404).contentType(PROBLEM_JSON);
@@ -108,7 +108,7 @@ class UserResourceTest {
     }
 
     @Test
-    void thereIsNoUserCreationEndpoint() {
+    void _07_ShouldNotExposeCreationEndpoint_WhenPostingUser() {
         // Users are created by feature/auth's register endpoint only, never by UserResource.
         given().auth().oauth2(admin).contentType("application/json").body("{\"email\":\"a@b.c\"}")
                 .when().post(BASE).then().statusCode(405);
@@ -117,7 +117,7 @@ class UserResourceTest {
     }
 
     @Test
-    void readerCanReadButNotAssign() {
+    void _08_ShouldAllowReadButNotAssign_WhenCallerIsReader() {
         support.createRole("user-reader", "USER:READ");
         TestUser reader = support.createUser("user-reader");
         String token = support.token(reader);
@@ -130,7 +130,7 @@ class UserResourceTest {
     }
 
     @Test
-    void userWithoutRolesIsForbiddenAndAnonymousIs401() {
+    void _09_ShouldReturn403Or401_WhenUserHasNoRolesOrIsAnonymous() {
         String token = support.token(support.createUser());
         given().auth().oauth2(token).when().get(BASE).then().statusCode(403).contentType(PROBLEM_JSON);
         given().when().get(BASE).then().statusCode(401).contentType(PROBLEM_JSON).body("status", is(401));
