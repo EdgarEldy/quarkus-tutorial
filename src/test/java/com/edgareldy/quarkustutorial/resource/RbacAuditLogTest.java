@@ -55,7 +55,7 @@ class RbacAuditLogTest {
     }
 
     @Test
-    void roleCreateUpdateDeleteAreAudited() {
+    void _01_ShouldAudit_WhenRoleCreatedUpdatedOrDeleted() {
         Long id = post("/api/v1/roles", "{\"roleName\":\"" + RbacTestSupport.unique("audit") + "\"}");
         support.trackRole(id);
         assertAudited("ROLE_CREATED", "ROLE", id);
@@ -70,7 +70,7 @@ class RbacAuditLogTest {
     }
 
     @Test
-    void permissionCreateUpdateDeleteAreAudited() {
+    void _02_ShouldAudit_WhenPermissionCreatedUpdatedOrDeleted() {
         String resource = RbacTestSupport.unique("res").toUpperCase();
         Long id = post("/api/v1/permissions", "{\"resource\":\"" + resource + "\",\"action\":\"READ\"}");
         support.trackPermission(id);
@@ -86,7 +86,7 @@ class RbacAuditLogTest {
     }
 
     @Test
-    void permissionAssignAndRemoveOnARoleAreAudited() {
+    void _03_ShouldAudit_WhenPermissionAssignedOrRemovedOnRole() {
         Long roleId = support.createRole(RbacTestSupport.unique("audit"));
         Long permissionId = support.permissionId("CATEGORY", "READ");
         given().auth().oauth2(token).when().post("/api/v1/roles/" + roleId + "/permissions/" + permissionId)
@@ -102,7 +102,7 @@ class RbacAuditLogTest {
     }
 
     @Test
-    void roleAssignAndRemoveOnAUserAreAudited() {
+    void _04_ShouldAudit_WhenRoleAssignedOrRemovedOnUser() {
         Long roleId = support.createRole(RbacTestSupport.unique("audit"));
         TestUser target = support.createUser();
         given().auth().oauth2(token).when().patch("/api/v1/users/" + target.id() + "/roles/" + roleId)
@@ -115,7 +115,7 @@ class RbacAuditLogTest {
     }
 
     @Test
-    void rejectedDeletesAreAuditedDespiteTheRollback() {
+    void _05_ShouldAuditRejection_WhenDeleteIsRolledBack() {
         Long roleId = support.createRole(RbacTestSupport.unique("audit"));
         TestUser holder = support.createUser();
         support.grantRole(holder.id(), roleId);

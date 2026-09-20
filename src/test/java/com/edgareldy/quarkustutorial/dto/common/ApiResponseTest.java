@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 class ApiResponseTest {
 
     @Test
-    void successBuildsEnvelopeWithFlagMessageDataAndTimestamp() {
+    void _01_ShouldBuildEnvelopeWithAllFields_WhenCreatedWithSuccess() {
         Instant before = Instant.now();
         ApiResponse<String> response = ApiResponse.success("payload", "done");
         Instant after = Instant.now();
@@ -29,7 +29,7 @@ class ApiResponseTest {
     }
 
     @Test
-    void successAcceptsNullData() {
+    void _02_ShouldAcceptNullData_WhenCreatedWithSuccess() {
         ApiResponse<Object> response = ApiResponse.success(null, "empty");
         assertTrue(response.success());
         assertNull(response.data());

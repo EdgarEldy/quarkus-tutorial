@@ -90,7 +90,7 @@ class ExpiredTokenCleanupJobTest {
     }
 
     @Test
-    void deletesExpiredRowsOfAllThreeTablesAndKeepsTheRest() {
+    void _01_ShouldDeleteExpiredRowsOfAllTables_WhenJobRuns() {
         // Purge anything expired that other test classes left, so the count below is exact.
         job.cleanup();
         TestUser owner = support.createUser();

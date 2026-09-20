@@ -66,7 +66,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void createWithUnknownCategoryIsRefused() {
+    void _01_ShouldRefuseCreation_WhenCategoryUnknown() {
         when(categoryRepository.findById(7L)).thenReturn(null);
 
         assertThrows(BusinessRuleException.class,
@@ -75,7 +75,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void createScalesThePriceLikeTheDatabaseColumn() {
+    void _02_ShouldScalePriceLikeDatabaseColumn_WhenCreatingProduct() {
         when(categoryRepository.findById(1L)).thenReturn(category(1L));
 
         ProductResponse response = service.create(new ProductRequest(1L, "Pen", new BigDecimal("10.5")));
@@ -84,7 +84,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void createPersistsAndMapsResponse() {
+    void _03_ShouldPersistAndMapResponse_WhenCreatingProduct() {
         when(categoryRepository.findById(1L)).thenReturn(category(1L));
 
         ProductResponse response = service.create(new ProductRequest(1L, "Pen", new BigDecimal("2.50")));
@@ -96,7 +96,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void updateWithUnknownCategoryIsRefused() {
+    void _04_ShouldRefuseUpdate_WhenCategoryUnknown() {
         Product existing = product(3L, category(1L), "Old", "1.00");
         when(productRepository.findById(3L)).thenReturn(existing);
         when(categoryRepository.findById(7L)).thenReturn(null);
@@ -107,7 +107,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void updateChangesFields() {
+    void _05_ShouldChangeFields_WhenUpdatingProduct() {
         Product existing = product(3L, category(1L), "Old", "1.00");
         when(productRepository.findById(3L)).thenReturn(existing);
         when(categoryRepository.findById(2L)).thenReturn(category(2L));
@@ -120,7 +120,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void missingProductIsNotFoundOnFindUpdateDelete() {
+    void _06_ShouldThrowNotFound_WhenProductMissingOnFindUpdateOrDelete() {
         when(productRepository.findById(9L)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.findById(9L));
@@ -131,7 +131,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void deleteRemovesProduct() {
+    void _07_ShouldRemoveProduct_WhenProductExists() {
         Product existing = product(3L, category(1L), "Old", "1.00");
         when(productRepository.findById(3L)).thenReturn(existing);
 
@@ -141,7 +141,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void deleteIsRefusedWhileOrdersReferenceTheProduct() {
+    void _08_ShouldRefuseDeletion_WhenOrdersReferenceTheProduct() {
         Product existing = product(3L, category(1L), "Old", "1.00");
         when(productRepository.findById(3L)).thenReturn(existing);
         when(orderRepository.countByProductId(3L)).thenReturn(1L);
@@ -152,7 +152,7 @@ class ProductServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void listWithoutFilterUsesGlobalCount() {
+    void _09_ShouldUseGlobalCount_WhenListingWithoutFilter() {
         PanacheQuery<Product> query = mock(PanacheQuery.class);
         PanacheQuery<Product> paged = mock(PanacheQuery.class);
         when(productRepository.findByCategory(null)).thenReturn(query);
@@ -174,7 +174,7 @@ class ProductServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void listWithCategoryFilterUsesCategoryCount() {
+    void _10_ShouldUseCategoryCount_WhenListingWithCategoryFilter() {
         PanacheQuery<Product> query = mock(PanacheQuery.class);
         PanacheQuery<Product> paged = mock(PanacheQuery.class);
         when(productRepository.findByCategory(4L)).thenReturn(query);

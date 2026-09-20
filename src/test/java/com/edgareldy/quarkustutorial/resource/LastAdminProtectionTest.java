@@ -67,7 +67,7 @@ class LastAdminProtectionTest {
     }
 
     @Test
-    void removingTheRoleFromTheLastHolderIsRejectedAndAudited() {
+    void _01_ShouldRejectAndAudit_WhenRemovingRoleFromLastHolder() {
         given().auth().oauth2(token).when().delete("/api/v1/users/" + admin.id() + "/roles/" + roleId)
                 .then().statusCode(422).contentType(PROBLEM_JSON)
                 .body("status", is(422)).body("detail", containsString("ROLE:WRITE"))
@@ -83,7 +83,7 @@ class LastAdminProtectionTest {
     }
 
     @Test
-    void removingRoleWritePermissionFromTheOnlySourceIsRejectedAndAudited() {
+    void _02_ShouldRejectAndAudit_WhenRemovingRoleWriteFromOnlySource() {
         given().auth().oauth2(token).when().delete("/api/v1/roles/" + roleId + "/permissions/" + roleWritePermissionId)
                 .then().statusCode(422).contentType(PROBLEM_JSON)
                 .body("status", is(422)).body("detail", containsString("ROLE:WRITE"))
@@ -97,7 +97,7 @@ class LastAdminProtectionTest {
     }
 
     @Test
-    void roleRemovalIsAllowedWhenAnotherUserStillHoldsRoleWrite() {
+    void _03_ShouldAllowRoleRemoval_WhenAnotherUserStillHoldsRoleWrite() {
         TestUser second = support.createUser();
         support.grantRole(second.id(), roleId);
         given().auth().oauth2(token).when().delete("/api/v1/users/" + admin.id() + "/roles/" + roleId)
@@ -105,7 +105,7 @@ class LastAdminProtectionTest {
     }
 
     @Test
-    void roleRemovalIsAllowedWhenTheUserKeepsRoleWriteThroughAnotherRole() {
+    void _04_ShouldAllowRoleRemoval_WhenUserKeepsRoleWriteThroughAnotherRole() {
         Long backup = support.createRole(RbacTestSupport.unique("backup"), "ROLE:WRITE");
         support.grantRole(admin.id(), backup);
         given().auth().oauth2(token).when().delete("/api/v1/users/" + admin.id() + "/roles/" + roleId)
@@ -113,7 +113,7 @@ class LastAdminProtectionTest {
     }
 
     @Test
-    void permissionRemovalIsAllowedWhenAnotherRoleStillGrantsItToAHolder() {
+    void _05_ShouldAllowPermissionRemoval_WhenAnotherRoleStillGrantsItToAHolder() {
         Long backup = support.createRole(RbacTestSupport.unique("backup"), "ROLE:WRITE");
         TestUser second = support.createUser();
         support.grantRole(second.id(), backup);
@@ -123,7 +123,7 @@ class LastAdminProtectionTest {
 
     @ParameterizedTest
     @CsvSource({"false,false", "true,true"})
-    void inactiveOtherHolderDoesNotCountAsAnotherAdmin(boolean enabled, boolean locked) {
+    void _06_ShouldNotCountAsAnotherAdmin_WhenOtherHolderIsDisabledOrLocked(boolean enabled, boolean locked) {
         // The other holder is disabled (or locked): they cannot act, so the caller is the last active admin.
         TestUser other = support.createUser();
         support.grantRole(other.id(), roleId);
@@ -136,7 +136,7 @@ class LastAdminProtectionTest {
     }
 
     @Test
-    void enabledUnlockedOtherHolderAllowsRemoval() {
+    void _07_ShouldAllowRemoval_WhenOtherHolderIsEnabledAndUnlocked() {
         TestUser other = support.createUser();
         support.grantRole(other.id(), roleId);
         support.setStatus(other.id(), true, false);
@@ -145,7 +145,7 @@ class LastAdminProtectionTest {
     }
 
     @Test
-    void concurrentCrossRemovalsNeverLeaveZeroActiveAdmins() throws Exception {
+    void _08_ShouldNeverLeaveZeroActiveAdmins_WhenRemovalsRunConcurrently() throws Exception {
         // Admin A holds roleId, admin B holds roleB; each removes the other's role at the same instant.
         // The advisory lock in removeRoleFromUser serialises them, so the second one sees the first commit.
         Long roleB = support.createRole(RbacTestSupport.unique("last-admin-b"), "ROLE:WRITE", "ROLE:READ",
