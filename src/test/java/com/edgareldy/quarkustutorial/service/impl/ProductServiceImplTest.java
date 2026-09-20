@@ -141,7 +141,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void deleteIsRefusedWhileOrdersReferenceTheProduct() {
+    void _08_ShouldRefuseDeletion_WhenOrdersReferenceTheProduct() {
         Product existing = product(3L, category(1L), "Old", "1.00");
         when(productRepository.findById(3L)).thenReturn(existing);
         when(orderRepository.countByProductId(3L)).thenReturn(1L);
@@ -152,7 +152,7 @@ class ProductServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void _08_ShouldUseGlobalCount_WhenListingWithoutFilter() {
+    void _09_ShouldUseGlobalCount_WhenListingWithoutFilter() {
         PanacheQuery<Product> query = mock(PanacheQuery.class);
         PanacheQuery<Product> paged = mock(PanacheQuery.class);
         when(productRepository.findByCategory(null)).thenReturn(query);
@@ -174,7 +174,7 @@ class ProductServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void _09_ShouldUseCategoryCount_WhenListingWithCategoryFilter() {
+    void _10_ShouldUseCategoryCount_WhenListingWithCategoryFilter() {
         PanacheQuery<Product> query = mock(PanacheQuery.class);
         PanacheQuery<Product> paged = mock(PanacheQuery.class);
         when(productRepository.findByCategory(4L)).thenReturn(query);
