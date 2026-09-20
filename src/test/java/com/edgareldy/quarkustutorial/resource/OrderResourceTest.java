@@ -112,7 +112,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void createReturns201WithComputedTotalAndDetailRoundTrips() {
+    void _01_ShouldReturn201WithComputedTotal_WhenCreatingOrder() {
         Long cust = customer();
         Long prod = product(category(), "2.50");
 
@@ -138,7 +138,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void totalIsFrozenWhenTheProductPriceChangesLater() {
+    void _02_ShouldKeepTotalFrozen_WhenProductPriceChangesLater() {
         Long cat = category();
         Long cust = customer();
         Long prod = product(cat, "4.00");
@@ -157,14 +157,14 @@ class OrderResourceTest {
     }
 
     @Test
-    void unknownOrderIs404Problem() {
+    void _03_ShouldReturn404Problem_WhenOrderIdUnknown() {
         given().auth().oauth2(admin).when().get(BASE + "/999999999")
                 .then().statusCode(404).contentType(PROBLEM_JSON).body("status", is(404))
                 .body("$", not(hasKey("success")));
     }
 
     @Test
-    void listIsPaginatedAndFilteredByCustomerProductOrBoth() {
+    void _04_ShouldPaginateAndFilter_WhenListingByCustomerProductOrBoth() {
         Long cat = category();
         Long custA = customer();
         Long custB = customer();
@@ -205,13 +205,13 @@ class OrderResourceTest {
     }
 
     @Test
-    void invalidPageSizeIs400Problem() {
+    void _05_ShouldReturn400Problem_WhenPageSizeIsInvalid() {
         given().auth().oauth2(admin).queryParam("size", 0).when().get(BASE)
                 .then().statusCode(400).contentType(PROBLEM_JSON).body("$", not(hasKey("success")));
     }
 
     @Test
-    void invalidBodyIs400ProblemWithViolations() {
+    void _06_ShouldReturn400ProblemWithViolations_WhenBodyInvalid() {
         Long cust = customer();
         Long prod = product(category(), "1.00");
         List<String> bodies = List.of(
@@ -231,7 +231,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void unknownCustomerOrProductIs422Problem() {
+    void _07_ShouldReturn422Problem_WhenCustomerOrProductUnknown() {
         Long cust = customer();
         Long prod = product(category(), "1.00");
         given().auth().oauth2(admin).contentType(JSON).body(body(999999999, prod, 1)).when().post(BASE)
@@ -242,7 +242,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void totalBeyondNumeric14Is422ProblemAndLargestFittingTotalIsAccepted() {
+    void _08_ShouldReturn422Problem_WhenTotalExceedsNumeric14() {
         Long cust = customer();
         Long prod = product(category(), "9999999999.99");
         given().auth().oauth2(admin).contentType(JSON).body(body(cust, prod, 100)).when().post(BASE)
@@ -256,7 +256,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void readerCanReadButNotCreateAndWriterCanCreate() {
+    void _09_ShouldAllowReadButNotCreate_WhenCallerIsReader() {
         Long cust = customer();
         Long prod = product(category(), "1.00");
         Long id = order(cust, prod, 1);
@@ -273,7 +273,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void userWithoutPermissionIs403AndNoTokenIs401() {
+    void _10_ShouldReturn403Or401_WhenUserLacksPermissionOrTokenMissing() {
         String nobody = support.token(support.createUser());
         given().auth().oauth2(nobody).when().get(BASE).then().statusCode(403).contentType(PROBLEM_JSON);
         given().auth().oauth2(nobody).when().get(BASE + "/1").then().statusCode(403).contentType(PROBLEM_JSON);
@@ -284,7 +284,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void productWithOrdersCannotBeDeletedUntilOrdersAreGone() {
+    void _11_ShouldRefuseProductDeletion_WhenProductHasOrders() {
         Long cust = customer();
         Long prod = product(category(), "1.00");
         order(cust, prod, 1);
@@ -298,7 +298,7 @@ class OrderResourceTest {
     }
 
     @Test
-    void customerWithOrdersCannotBeDeletedUntilOrdersAreGone() {
+    void _12_ShouldRefuseCustomerDeletion_WhenCustomerHasOrders() {
         Long cust = customer();
         Long prod = product(category(), "1.00");
         order(cust, prod, 1);

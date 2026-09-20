@@ -75,7 +75,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void createComputesTotalFromCurrentUnitPriceWithScale2() {
+    void _01_ShouldComputeTotalFromCurrentUnitPriceWithScale2_WhenCreatingOrder() {
         when(customerRepository.findById(1L)).thenReturn(customer(1L));
         when(productRepository.findById(2L)).thenReturn(product(2L, "2.50"));
 
@@ -93,7 +93,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void createWithUnknownCustomerIsRefused() {
+    void _02_ShouldRefuseCreation_WhenCustomerUnknown() {
         when(customerRepository.findById(1L)).thenReturn(null);
 
         assertThrows(BusinessRuleException.class, () -> service.create(new OrderRequest(1L, 2L, 1)));
@@ -101,7 +101,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void createWithUnknownProductIsRefused() {
+    void _03_ShouldRefuseCreation_WhenProductUnknown() {
         when(customerRepository.findById(1L)).thenReturn(customer(1L));
         when(productRepository.findById(2L)).thenReturn(null);
 
@@ -110,7 +110,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void createWithTotalBeyondNumeric14IsRefused() {
+    void _04_ShouldRefuseCreation_WhenTotalExceedsNumeric14() {
         when(customerRepository.findById(1L)).thenReturn(customer(1L));
         when(productRepository.findById(2L)).thenReturn(product(2L, "9999999999.99"));
 
@@ -119,7 +119,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void createAcceptsTheLargestTotalThatFits() {
+    void _05_ShouldAcceptCreation_WhenTotalIsLargestThatFits() {
         when(customerRepository.findById(1L)).thenReturn(customer(1L));
         when(productRepository.findById(2L)).thenReturn(product(2L, "9999999999.99"));
 
@@ -130,7 +130,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void findByIdMapsAndMissingIsNotFound() {
+    void _06_ShouldMapOrThrowNotFound_WhenFindingById() {
         when(orderRepository.findById(5L)).thenReturn(order(5L, customer(1L), product(2L, "1.00"), 2, "2.00"));
         when(orderRepository.findById(9L)).thenReturn(null);
 
@@ -143,7 +143,7 @@ class OrderServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void listBuildsPageResponseFromFilteredQueryAndCount() {
+    void _07_ShouldBuildPageResponse_WhenListingWithFilters() {
         PanacheQuery<Order> query = mock(PanacheQuery.class);
         PanacheQuery<Order> paged = mock(PanacheQuery.class);
         when(orderRepository.search(1L, null)).thenReturn(query);

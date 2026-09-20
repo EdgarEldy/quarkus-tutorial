@@ -116,7 +116,7 @@ class OrderRepositoryTest {
     }
 
     @Test
-    void persistAndFindRoundTripOnTheCustomerOrderEntity() {
+    void _01_ShouldRoundTripOrder_WhenPersistedAndFound() {
         Long id = order(customerA, productA, 3, "7.50");
 
         Order found = QuarkusTransaction.requiringNew().call(() -> {
@@ -132,7 +132,7 @@ class OrderRepositoryTest {
     }
 
     @Test
-    void searchAndCountWorkWithEveryFilterCombination() {
+    void _02_ShouldSearchAndCount_WhenAnyFilterCombinationUsed() {
         Long o1 = order(customerA, productA, 1, "2.50");
         Long o2 = order(customerA, productB, 2, "5.00");
         Long o3 = order(customerB, productA, 3, "7.50");
@@ -156,7 +156,7 @@ class OrderRepositoryTest {
     }
 
     @Test
-    void countByCustomerAndProductCountOnlyReferencingOrders() {
+    void _03_ShouldCountOnlyReferencingOrders_WhenCountingByCustomerAndProduct() {
         order(customerA, productA, 1, "2.50");
         order(customerA, productB, 1, "2.50");
         order(customerB, productA, 1, "2.50");
@@ -170,7 +170,7 @@ class OrderRepositoryTest {
     }
 
     @Test
-    void foreignKeysAndChecksAreEnforced() {
+    void _04_ShouldEnforceForeignKeysAndChecks_WhenInvalidRowInserted() {
         assertThrows(RuntimeException.class, () -> QuarkusTransaction.requiringNew().run(() -> em
                 .createNativeQuery("insert into orders (customer_id, product_id, quantity, total) "
                         + "values (999999999, " + productA + ", 1, 1.00)").executeUpdate()));

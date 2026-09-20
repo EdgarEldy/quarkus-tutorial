@@ -70,7 +70,7 @@ class AuthResourceTest {
     }
 
     @Test
-    void fullFlowRegisterActivateLoginMeLogout() {
+    void _01_ShouldCompleteFullFlow_WhenRegisteringActivatingLoggingInAndOut() {
         String email = uniqueEmail();
         register(email, PASSWORD).statusCode(201)
                 .contentType("application/json")
@@ -119,7 +119,7 @@ class AuthResourceTest {
     }
 
     @Test
-    void forgotAndResetPasswordFlowIsSingleUse() {
+    void _02_ShouldAllowSingleUse_WhenResettingPassword() {
         String email = registerAndActivate();
 
         given().contentType("application/json").body("{\"email\":\"" + email + "\"}")
@@ -139,7 +139,7 @@ class AuthResourceTest {
     }
 
     @Test
-    void registerDuplicateEmailIs422() {
+    void _03_ShouldReturn422_WhenRegisteringDuplicateEmail() {
         String email = uniqueEmail();
         register(email, PASSWORD).statusCode(201);
         register(email, PASSWORD).statusCode(422)
@@ -149,7 +149,7 @@ class AuthResourceTest {
     }
 
     @Test
-    void registerWithInvalidBodyIs400WithViolations() {
+    void _04_ShouldReturn400WithViolations_WhenRegisterBodyInvalid() {
         given().contentType("application/json")
                 .body("{\"firstName\":\"\",\"lastName\":\"L\",\"email\":\"not-an-email\",\"password\":\"short\"}")
                 .when().post(BASE + "/register")
@@ -161,7 +161,7 @@ class AuthResourceTest {
     }
 
     @Test
-    void loginUnknownEmailAndWrongPasswordAreIndistinguishable() {
+    void _05_ShouldBeIndistinguishable_WhenEmailUnknownOrPasswordWrong() {
         String email = registerAndActivate();
         ValidatableResponse unknown = login(uniqueEmail(), PASSWORD).statusCode(401).contentType(PROBLEM_JSON);
         ValidatableResponse wrong = login(email, "WrongPassw0rd!!").statusCode(401).contentType(PROBLEM_JSON);
@@ -171,7 +171,7 @@ class AuthResourceTest {
     }
 
     @Test
-    void loginBeforeActivationIs401() {
+    void _06_ShouldReturn401_WhenLoggingInBeforeActivation() {
         String email = uniqueEmail();
         register(email, PASSWORD).statusCode(201);
         login(email, PASSWORD).statusCode(401)
@@ -181,12 +181,12 @@ class AuthResourceTest {
     }
 
     @Test
-    void meWithoutTokenIs401() {
+    void _07_ShouldReturn401_WhenCallingMeWithoutToken() {
         given().when().get(BASE + "/me").then().statusCode(401);
     }
 
     @Test
-    void activateWithBadTokenIs422() {
+    void _08_ShouldReturn422_WhenActivatingWithBadToken() {
         given().queryParam("token", "definitely-not-a-real-token").when().get(BASE + "/activate-account")
                 .then().statusCode(422)
                 .contentType(PROBLEM_JSON)

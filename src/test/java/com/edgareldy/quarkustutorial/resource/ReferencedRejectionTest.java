@@ -40,7 +40,7 @@ class ReferencedRejectionTest {
     }
 
     @Test
-    void roleAssignedToAUserCannotBeDeletedUntilUnassigned() {
+    void _01_ShouldRejectRoleDeletion_WhenRoleIsAssignedToUser() {
         Long roleId = support.createRole(RbacTestSupport.unique("held"));
         TestUser holder = support.createUser();
         support.grantRole(holder.id(), roleId);
@@ -61,7 +61,7 @@ class ReferencedRejectionTest {
     }
 
     @Test
-    void permissionAssignedToARoleCannotBeDeletedUntilUnassigned() {
+    void _02_ShouldRejectPermissionDeletion_WhenPermissionIsAssignedToRole() {
         Long permissionId = support.createPermission(RbacTestSupport.unique("res").toUpperCase(), "READ");
         Long roleId = support.createRole(RbacTestSupport.unique("carrier"));
         given().auth().oauth2(admin).when().post("/api/v1/roles/" + roleId + "/permissions/" + permissionId)

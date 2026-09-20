@@ -22,7 +22,7 @@ class ProblemDetailsTest {
     private static final String PROBLEM_JSON = "application/problem+json";
 
     @Test
-    void resourceNotFoundIsProblem404() {
+    void _01_ShouldReturnProblem404_WhenResourceNotFound() {
         given().when().get("/test-support/not-found")
                 .then().statusCode(404)
                 .contentType(PROBLEM_JSON)
@@ -34,7 +34,7 @@ class ProblemDetailsTest {
     }
 
     @Test
-    void businessRuleIsProblem422() {
+    void _02_ShouldReturnProblem422_WhenBusinessRuleViolated() {
         given().when().get("/test-support/business-rule")
                 .then().statusCode(422)
                 .contentType(PROBLEM_JSON)
@@ -46,7 +46,7 @@ class ProblemDetailsTest {
     }
 
     @Test
-    void beanValidationFailureIsProblem400WithViolations() {
+    void _03_ShouldReturnProblem400WithViolations_WhenBeanValidationFails() {
         given().contentType("application/json").body("{\"name\":\"\"}")
                 .when().post("/test-support/validate")
                 .then().statusCode(400)
@@ -57,7 +57,7 @@ class ProblemDetailsTest {
     }
 
     @Test
-    void validRequestStillReturnsSuccessEnvelope() {
+    void _04_ShouldReturnSuccessEnvelope_WhenRequestIsValid() {
         given().contentType("application/json").body("{\"name\":\"bob\"}")
                 .when().post("/test-support/validate")
                 .then().statusCode(200)
@@ -66,7 +66,7 @@ class ProblemDetailsTest {
     }
 
     @Test
-    void unexpectedExceptionIsGeneric500WithoutLeaks() {
+    void _05_ShouldReturnGeneric500WithoutLeaks_WhenUnexpectedExceptionThrown() {
         String body = given().when().get("/test-support/unexpected")
                 .then().statusCode(500)
                 .contentType(PROBLEM_JSON)

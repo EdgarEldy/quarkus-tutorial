@@ -53,7 +53,7 @@ class CustomerRepositoryTest {
     }
 
     @Test
-    void persistAndFindRoundTrip() {
+    void _01_ShouldRoundTripCustomer_WhenPersistedAndFound() {
         customerId = persist("123", "ada@example.com", "London");
         Customer found = QuarkusTransaction.requiringNew().call(() -> repository.findById(customerId));
         assertNotNull(found);
@@ -65,7 +65,7 @@ class CustomerRepositoryTest {
     }
 
     @Test
-    void nullableColumnsRoundTripAsNull() {
+    void _02_ShouldRoundTripNulls_WhenOptionalColumnsAreNull() {
         customerId = persist(null, null, null);
         Customer found = QuarkusTransaction.requiringNew().call(() -> repository.findById(customerId));
         assertNotNull(found);
@@ -75,7 +75,7 @@ class CustomerRepositoryTest {
     }
 
     @Test
-    void deleteRemovesRow() {
+    void _03_ShouldRemoveRow_WhenCustomerDeleted() {
         customerId = persist(null, null, null);
         QuarkusTransaction.requiringNew().run(() -> repository.deleteById(customerId));
         assertNull(QuarkusTransaction.requiringNew().call(() -> repository.findById(customerId)));
