@@ -30,7 +30,7 @@ class ForgotPasswordEnumerationTest {
     PasswordResetTokenRepository resetTokens;
 
     @Test
-    void registeredAndUnregisteredEmailsGetTheSameAnswer() {
+    void _01_ShouldGiveSameAnswer_WhenEmailIsRegisteredOrNot() {
         String known = "known" + System.nanoTime() + "@example.com";
         given().contentType("application/json")
                 .body("{\"firstName\":\"A\",\"lastName\":\"B\",\"email\":\"" + known + "\",\"password\":\"Str0ngPassw0rd!\"}")

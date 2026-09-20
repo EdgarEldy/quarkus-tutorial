@@ -71,7 +71,7 @@ class ProductRepositoryTest {
     }
 
     @Test
-    void findByCategoryFiltersAndOrdersById() {
+    void _01_ShouldFilterAndOrderById_WhenFindingByCategory() {
         Long catA = category();
         Long catB = category();
         Long a1 = product(catA, "A1", "1.00");
@@ -92,7 +92,7 @@ class ProductRepositoryTest {
     }
 
     @Test
-    void countByCategoryIdCountsOnlyThatCategory() {
+    void _02_ShouldCountOnlyThatCategory_WhenCountingByCategoryId() {
         Long catA = category();
         Long catB = category();
         product(catA, "A1", "1.00");
@@ -105,7 +105,7 @@ class ProductRepositoryTest {
     }
 
     @Test
-    void unitPriceRoundTripsAsNumeric12Scale2() {
+    void _03_ShouldRoundTripPriceAsNumeric12Scale2_WhenProductPersisted() {
         Long cat = category();
         Long id = product(cat, "Precise", "79.99");
         Long big = product(cat, "Big", "9999999999.99");
@@ -118,7 +118,7 @@ class ProductRepositoryTest {
     }
 
     @Test
-    void missingCategoryViolatesForeignKey() {
+    void _04_ShouldViolateForeignKey_WhenCategoryMissing() {
         assertThrows(RuntimeException.class, () -> QuarkusTransaction.requiringNew().run(() -> em
                 .createNativeQuery("insert into products (category_id, product_name, unit_price) "
                         + "values (999999999, 'Orphan', 1.00)").executeUpdate()));

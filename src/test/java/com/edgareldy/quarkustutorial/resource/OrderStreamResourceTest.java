@@ -97,19 +97,19 @@ class OrderStreamResourceTest {
     }
 
     @Test
-    void streamWithoutTokenIs401() {
+    void _01_ShouldReturn401_WhenStreamOpenedWithoutToken() {
         given().accept("text/event-stream").when().get(STREAM).then().statusCode(401);
     }
 
     @Test
-    void streamWithoutOrderReadIs403Problem() {
+    void _02_ShouldReturn403Problem_WhenStreamOpenedWithoutOrderRead() {
         String token = tokenWith("ORDER:WRITE");
         given().auth().oauth2(token).accept("text/event-stream").when().get(STREAM)
                 .then().statusCode(403).contentType(PROBLEM_JSON);
     }
 
     @Test
-    void createdOrderIsPushedAsADataEventWithEventStreamContentType() throws Exception {
+    void _03_ShouldPushDataEventWithEventStreamContentType_WhenOrderCreated() throws Exception {
         Long category = given().auth().oauth2(admin).contentType(JSON)
                 .body("{\"categoryName\":\"" + RbacTestSupport.unique("cat") + "\"}").when()
                 .post("/api/v1/categories").then().statusCode(201).extract().jsonPath().getLong("data.id");

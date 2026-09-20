@@ -50,7 +50,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void listIncludesSeededAdminWithItsPermissions() {
+    void _01_ShouldIncludeSeededAdminWithPermissions_WhenListingRoles() {
         given().auth().oauth2(admin).when().get(BASE)
                 .then().statusCode(200).contentType("application/json")
                 .body("success", is(true))
@@ -59,7 +59,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void createReturns201WithEnvelope() {
+    void _02_ShouldReturn201WithEnvelope_WhenCreatingRole() {
         String name = RbacTestSupport.unique("role");
         given().auth().oauth2(admin).contentType("application/json").body("{\"roleName\":\"" + name + "\"}")
                 .when().post(BASE)
@@ -72,7 +72,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void duplicateNameIs422Problem() {
+    void _03_ShouldReturn422Problem_WhenRoleNameIsDuplicated() {
         String name = RbacTestSupport.unique("role");
         createRoleViaApi(name);
         given().auth().oauth2(admin).contentType("application/json").body("{\"roleName\":\"" + name + "\"}")
@@ -85,7 +85,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void blankNameIs400ValidationProblem() {
+    void _04_ShouldReturn400ValidationProblem_WhenRoleNameIsBlank() {
         given().auth().oauth2(admin).contentType("application/json").body("{\"roleName\":\"  \"}")
                 .when().post(BASE)
                 .then().statusCode(400).contentType(PROBLEM_JSON)
@@ -94,7 +94,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void updateRenamesRoleAndRejectsDuplicateOrUnknown() {
+    void _05_ShouldRenameRoleAndRejectDuplicateOrUnknown_WhenUpdatingRole() {
         Long id = createRoleViaApi(RbacTestSupport.unique("role"));
         Long other = createRoleViaApi(RbacTestSupport.unique("role"));
         String renamed = RbacTestSupport.unique("renamed");
@@ -113,7 +113,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void deleteRemovesRoleThenIs404() {
+    void _06_ShouldReturn404AfterRemoval_WhenRoleDeleted() {
         Long id = createRoleViaApi(RbacTestSupport.unique("role"));
         given().auth().oauth2(admin).when().delete(BASE + "/" + id)
                 .then().statusCode(200).body("success", is(true)).body("message", is("Role deleted"));
@@ -122,7 +122,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void assignAndRemovePermission() {
+    void _07_ShouldAssignAndRemovePermission_WhenManagingRolePermissions() {
         Long id = createRoleViaApi(RbacTestSupport.unique("role"));
         Long readCategory = support.permissionId("CATEGORY", "READ");
         given().auth().oauth2(admin).when().post(BASE + "/" + id + "/permissions/" + readCategory)
@@ -138,7 +138,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void assignUnknownPermissionOrRoleIs404() {
+    void _08_ShouldReturn404_WhenAssigningUnknownPermissionOrRole() {
         Long id = createRoleViaApi(RbacTestSupport.unique("role"));
         given().auth().oauth2(admin).when().post(BASE + "/" + id + "/permissions/999999999")
                 .then().statusCode(404).contentType(PROBLEM_JSON);
@@ -147,7 +147,7 @@ class RoleResourceTest {
     }
 
     @Test
-    void readerCanListButNotWrite() {
+    void _09_ShouldAllowListButNotWrite_WhenCallerIsReader() {
         support.createRole("reader-role", "ROLE:READ");
         TestUser reader = support.createUser("reader-role");
         String token = support.token(reader);
@@ -160,14 +160,14 @@ class RoleResourceTest {
     }
 
     @Test
-    void userWithoutAnyRoleIsForbidden() {
+    void _10_ShouldReturn403_WhenUserHasNoRole() {
         String token = support.token(support.createUser());
         given().auth().oauth2(token).when().get(BASE)
                 .then().statusCode(403).contentType(PROBLEM_JSON).body("status", is(403));
     }
 
     @Test
-    void missingTokenIs401Problem() {
+    void _11_ShouldReturn401Problem_WhenTokenMissing() {
         given().when().get(BASE)
                 .then().statusCode(401).contentType(PROBLEM_JSON).body("status", is(401))
                 .body("$", not(hasKey("success")));

@@ -29,7 +29,7 @@ class AuditLoggerTransactionTest {
     RbacTestSupport support;
 
     @Test
-    void successRowIsRolledBackWithTheBusinessTransaction() {
+    void _01_ShouldRollBackSuccessRow_WhenBusinessTransactionRollsBack() {
         String action = RbacTestSupport.unique("TX_SUCCESS");
         assertThrows(IllegalStateException.class, () -> QuarkusTransaction.requiringNew().run(() -> {
             auditLogger.log(action, "TEST", 1L, "must vanish");
@@ -39,14 +39,14 @@ class AuditLoggerTransactionTest {
     }
 
     @Test
-    void successRowIsKeptWhenTheTransactionCommits() {
+    void _02_ShouldKeepSuccessRow_WhenTransactionCommits() {
         String action = RbacTestSupport.unique("TX_COMMIT");
         QuarkusTransaction.requiringNew().run(() -> auditLogger.log(action, "TEST", 2L, "kept"));
         assertEquals(1, support.audit(action, "TEST", 2L).size());
     }
 
     @Test
-    void rejectedRowSurvivesTheCallersRollback() {
+    void _03_ShouldKeepRejectedRow_WhenCallerRollsBack() {
         String action = RbacTestSupport.unique("TX_REJECTED");
         assertThrows(IllegalStateException.class, () -> QuarkusTransaction.requiringNew().run(() -> {
             auditLogger.logRejected(action, "TEST", 3L, "must survive");

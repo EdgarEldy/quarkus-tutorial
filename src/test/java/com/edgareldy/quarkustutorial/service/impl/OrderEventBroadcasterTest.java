@@ -143,7 +143,7 @@ class OrderEventBroadcasterTest {
     }
 
     @Test
-    void committedOrderIsEmittedToTheSubscriber() {
+    void _01_ShouldEmitToSubscriber_WhenOrderCommitted() {
         AssertSubscriber<OrderResponse> subscriber = subscribe();
         OrderResponse created = create();
 
@@ -154,7 +154,7 @@ class OrderEventBroadcasterTest {
     }
 
     @Test
-    void rolledBackCreationEmitsNothing() {
+    void _02_ShouldEmitNothing_WhenOrderCreationRolledBack() {
         AssertSubscriber<OrderResponse> subscriber = subscribe();
 
         assertThrows(BusinessRuleException.class,
@@ -166,7 +166,7 @@ class OrderEventBroadcasterTest {
     }
 
     @Test
-    void everyCurrentSubscriberReceivesTheEvent() {
+    void _03_ShouldDeliverToEverySubscriber_WhenOrderCreated() {
         AssertSubscriber<OrderResponse> first = subscribe();
         AssertSubscriber<OrderResponse> second = subscribe();
         OrderResponse created = create();
@@ -180,7 +180,7 @@ class OrderEventBroadcasterTest {
     }
 
     @Test
-    void lateSubscriberDoesNotReceiveAnAlreadyCreatedOrder() {
+    void _04_ShouldNotReplayOrder_WhenSubscriberJoinsLate() {
         AssertSubscriber<OrderResponse> early = subscribe();
         create();
         early.awaitItems(1, TIMEOUT);
