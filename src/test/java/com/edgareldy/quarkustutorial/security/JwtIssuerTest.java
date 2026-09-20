@@ -49,7 +49,7 @@ class JwtIssuerTest {
     }
 
     @Test
-    void tokenVerifiesWithDevPublicKeyAndCarriesExpectedClaims() throws Exception {
+    void _01_ShouldVerifyWithPublicKeyAndCarryExpectedClaims_WhenTokenIssued() throws Exception {
         long before = System.currentTimeMillis() / 1000;
         AuthResponse response = issuer.issue(user(42L));
 
@@ -65,7 +65,7 @@ class JwtIssuerTest {
     }
 
     @Test
-    void eachIssuedTokenHasAUniqueJti() throws Exception {
+    void _02_ShouldGiveUniqueJti_WhenTokensIssuedTwice() throws Exception {
         PublicKey key = devPublicKey();
         String first = parser.verify(issuer.issue(user(1L)).token(), key).getTokenID();
         String second = parser.verify(issuer.issue(user(1L)).token(), key).getTokenID();

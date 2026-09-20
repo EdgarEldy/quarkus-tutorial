@@ -57,7 +57,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void loginUnknownEmailFailsWithSameMessageAsWrongPassword() {
+    void _01_ShouldFailWithSameMessageAsWrongPassword_WhenEmailIsUnknown() {
         User user = new User();
         user.setPassword(BcryptUtil.bcryptHash("Correct-horse-1"));
         user.setEnabled(true);
@@ -75,7 +75,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void registerDuplicateThrowsBusinessRule() {
+    void _02_ShouldThrowBusinessRule_WhenRegisteringDuplicate() {
         when(users.findByEmail("dup@example.com")).thenReturn(Optional.of(new User()));
         assertThrows(BusinessRuleException.class,
                 () -> service.register(new RegisterRequest("A", "B", "dup@example.com", "Str0ngPassw0rd!")));
@@ -83,7 +83,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void activateAccountWithExpiredTokenIsRejected() {
+    void _03_ShouldRejectActivation_WhenTokenExpired() {
         ActivationToken token = new ActivationToken();
         User user = new User();
         token.setUser(user);
@@ -96,7 +96,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void logoutIsIdempotent() {
+    void _04_ShouldStaySuccessful_WhenLogoutCalledTwice() {
         when(blacklist.existsByJti("jti-1")).thenReturn(false, true);
         when(users.findById(7L)).thenReturn(new User());
 
@@ -107,7 +107,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void resetPasswordWithExpiredTokenIsRejected() {
+    void _05_ShouldRejectReset_WhenTokenExpired() {
         PasswordResetToken token = new PasswordResetToken();
         User user = new User();
         user.setPassword("old-hash");

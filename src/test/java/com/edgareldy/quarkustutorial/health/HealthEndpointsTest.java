@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 class HealthEndpointsTest {
 
     @Test
-    void readinessIsUpAndReportsDatabaseCheck() {
+    void _01_ShouldReportUpWithDatabaseCheck_WhenReadinessQueried() {
         given().when().get("/q/health/ready")
                 .then().statusCode(200)
                 .body("status", is("UP"))
@@ -27,7 +27,7 @@ class HealthEndpointsTest {
     }
 
     @Test
-    void livenessIsUpAndReportsApplicationCheck() {
+    void _02_ShouldReportUpWithApplicationCheck_WhenLivenessQueried() {
         given().when().get("/q/health/live")
                 .then().statusCode(200)
                 .body("status", is("UP"))
