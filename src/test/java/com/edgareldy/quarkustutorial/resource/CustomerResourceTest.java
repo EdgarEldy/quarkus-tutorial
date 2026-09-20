@@ -69,7 +69,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void createReturns201WithEnvelope() {
+    void _01_ShouldReturn201WithEnvelope_WhenCreatingCustomer() {
         Long id = given().auth().oauth2(admin).contentType("application/json").body(VALID).when().post(BASE)
                 .then().statusCode(201).contentType("application/json")
                 .body("success", is(true))
@@ -84,7 +84,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void optionalFieldsMayBeOmittedOrNull() {
+    void _02_ShouldAcceptRequest_WhenOptionalFieldsOmittedOrNull() {
         Long id = createViaApi("{\"firstName\":\"Min\",\"lastName\":\"Imal\"}");
         given().auth().oauth2(admin).when().get(BASE + "/" + id)
                 .then().statusCode(200)
@@ -99,7 +99,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void getByIdAndUpdate() {
+    void _03_ShouldReturnAndUpdateCustomer_WhenCustomerExists() {
         Long id = createViaApi(VALID);
         given().auth().oauth2(admin).when().get(BASE + "/" + id)
                 .then().statusCode(200).body("success", is(true)).body("data.id", is(id.intValue()));
@@ -112,7 +112,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void listIsPaginatedAndOrderedById() {
+    void _04_ShouldPaginateAndOrderById_WhenListingCustomers() {
         Long a = createViaApi(VALID);
         Long b = createViaApi(VALID);
         Long c = createViaApi(VALID);
@@ -131,7 +131,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void invalidPageSizeIs400Problem() {
+    void _05_ShouldReturn400Problem_WhenPageSizeIsInvalid() {
         given().auth().oauth2(admin).queryParam("size", 0).when().get(BASE)
                 .then().statusCode(400).contentType(PROBLEM_JSON).body("$", not(hasKey("success")));
         given().auth().oauth2(admin).queryParam("size", 101).when().get(BASE)
@@ -141,7 +141,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void unknownIdIs404Problem() {
+    void _06_ShouldReturn404Problem_WhenCustomerIdUnknown() {
         given().auth().oauth2(admin).when().get(BASE + "/999999999")
                 .then().statusCode(404).contentType(PROBLEM_JSON).body("status", is(404))
                 .body("$", not(hasKey("success")));
@@ -153,7 +153,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void invalidBodyIs400ProblemWithViolations() {
+    void _07_ShouldReturn400ProblemWithViolations_WhenBodyInvalid() {
         List<String> bodies = List.of(
                 "{\"firstName\":\"  \",\"lastName\":\"L\"}",
                 "{\"firstName\":\"F\",\"lastName\":\"\"}",
@@ -179,7 +179,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void deleteRemovesCustomer() {
+    void _08_ShouldRemoveCustomer_WhenDeleteSucceeds() {
         Long id = createViaApi(VALID);
         given().auth().oauth2(admin).when().delete(BASE + "/" + id)
                 .then().statusCode(200).body("success", is(true));
@@ -187,7 +187,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void readOnlyUserCanReadButNotWrite() {
+    void _09_ShouldAllowReadButNotWrite_WhenCallerIsReadOnly() {
         Long id = createViaApi(VALID);
         String reader = tokenWith("CUSTOMER:READ");
         given().auth().oauth2(reader).when().get(BASE).then().statusCode(200);
@@ -202,7 +202,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void writeOnlyUserCannotRead() {
+    void _10_ShouldReturn403_WhenWriteOnlyUserReads() {
         String writer = tokenWith("CUSTOMER:WRITE");
         given().auth().oauth2(writer).when().get(BASE).then().statusCode(403).contentType(PROBLEM_JSON);
         Long id = given().auth().oauth2(writer).contentType("application/json").body(VALID).when().post(BASE)
@@ -211,7 +211,7 @@ class CustomerResourceTest {
     }
 
     @Test
-    void userWithoutPermissionIs403AndNoTokenIs401() {
+    void _11_ShouldReturn403Or401_WhenUserLacksPermissionOrTokenMissing() {
         String nobody = support.token(support.createUser());
         given().auth().oauth2(nobody).when().get(BASE).then().statusCode(403).contentType(PROBLEM_JSON);
         given().auth().oauth2(nobody).when().get(BASE + "/1").then().statusCode(403).contentType(PROBLEM_JSON);

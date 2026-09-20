@@ -52,7 +52,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    void findByIdMapsEntity() {
+    void _01_ShouldMapEntity_WhenFindingById() {
         when(repository.findById(1L)).thenReturn(customer(1L, "Ada"));
 
         CustomerResponse r = service.findById(1L);
@@ -61,14 +61,14 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    void findByIdMissingIsNotFound() {
+    void _02_ShouldThrowNotFound_WhenFindingMissingCustomer() {
         when(repository.findById(9L)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.findById(9L));
     }
 
     @Test
-    void createPersistsMappedEntityIncludingNullOptionals() {
+    void _03_ShouldPersistMappedEntityWithNullOptionals_WhenCreatingCustomer() {
         CustomerResponse r = service.create(new CustomerRequest("Ada", "Lovelace", null, null, null));
 
         ArgumentCaptor<Customer> saved = ArgumentCaptor.forClass(Customer.class);
@@ -83,7 +83,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    void updateOverwritesAllFields() {
+    void _04_ShouldOverwriteAllFields_WhenUpdatingCustomer() {
         Customer existing = customer(1L, "Old");
         when(repository.findById(1L)).thenReturn(existing);
 
@@ -98,7 +98,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    void updateMissingIsNotFound() {
+    void _05_ShouldThrowNotFound_WhenUpdatingMissingCustomer() {
         when(repository.findById(9L)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class,
@@ -106,7 +106,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    void deleteRemovesCustomer() {
+    void _06_ShouldRemoveCustomer_WhenCustomerExists() {
         Customer c = customer(1L, "Ada");
         when(repository.findById(1L)).thenReturn(c);
 
@@ -116,7 +116,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    void deleteMissingIsNotFound() {
+    void _07_ShouldThrowNotFound_WhenDeletingMissingCustomer() {
         when(repository.findById(9L)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.delete(9L));
@@ -125,7 +125,7 @@ class CustomerServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void listBuildsPageResponse() {
+    void _08_ShouldBuildPageResponse_WhenListingCustomers() {
         PanacheQuery<Customer> all = mock(PanacheQuery.class);
         PanacheQuery<Customer> paged = mock(PanacheQuery.class);
         when(repository.findAll(any(Sort.class))).thenReturn(all);
