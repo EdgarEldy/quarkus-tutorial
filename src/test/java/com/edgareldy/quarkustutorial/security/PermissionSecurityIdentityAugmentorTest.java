@@ -63,7 +63,7 @@ class PermissionSecurityIdentityAugmentorTest {
     }
 
     @Test
-    void multiRoleUserGetsTheUnionOfPermissions() {
+    void _01_ShouldGrantUnionOfPermissions_WhenUserHasSeveralRoles() {
         support.createRole("aug-a", "USER:READ", "CATEGORY:READ");
         support.createRole("aug-b", "CATEGORY:READ", "ORDER:WRITE");
         TestUser user = support.createUser("aug-a", "aug-b");
@@ -76,7 +76,7 @@ class PermissionSecurityIdentityAugmentorTest {
     }
 
     @Test
-    void userWithoutRolesGetsNoPermission() {
+    void _02_ShouldGrantNoPermission_WhenUserHasNoRole() {
         TestUser user = support.createUser();
         SecurityIdentity identity = augmentFor(user.id());
         assertFalse(has(identity, "USER", "READ"));
@@ -84,13 +84,13 @@ class PermissionSecurityIdentityAugmentorTest {
     }
 
     @Test
-    void anonymousIdentityIsReturnedUnchanged() {
+    void _03_ShouldReturnIdentityUnchanged_WhenIdentityIsAnonymous() {
         SecurityIdentity anonymous = QuarkusSecurityIdentity.builder().setAnonymous(true).build();
         assertSame(anonymous, augmentor.augment(anonymous, DIRECT).await().indefinitely());
     }
 
     @Test
-    void permissionsAllowedEndpointFollowsTheAugmentedPermissions() {
+    void _04_ShouldFollowAugmentedPermissions_WhenCallingPermissionsAllowedEndpoint() {
         support.createRole("aug-c", "PERMISSION:READ");
         String token = support.token(support.createUser("aug-c"));
         // PERMISSION:READ was resolved by the augmentor at request time: accepted here, rejected for USER:READ.

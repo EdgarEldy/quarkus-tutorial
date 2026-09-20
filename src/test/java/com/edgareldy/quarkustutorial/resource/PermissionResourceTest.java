@@ -48,7 +48,7 @@ class PermissionResourceTest {
     }
 
     @Test
-    void listReturnsSeededCatalog() {
+    void _01_ShouldReturnSeededCatalog_WhenListingPermissions() {
         given().auth().oauth2(admin).when().get(BASE)
                 .then().statusCode(200).contentType("application/json")
                 .body("success", is(true))
@@ -57,7 +57,7 @@ class PermissionResourceTest {
     }
 
     @Test
-    void createNormalisesToUpperCase() {
+    void _02_ShouldNormaliseToUpperCase_WhenCreatingPermission() {
         String resource = RbacTestSupport.unique("res").toUpperCase();
         given().auth().oauth2(admin).contentType("application/json")
                 .body("{\"resource\":\"" + resource.toLowerCase() + "\",\"action\":\"exec\"}")
@@ -68,7 +68,7 @@ class PermissionResourceTest {
     }
 
     @Test
-    void duplicatePairIs422Problem() {
+    void _03_ShouldReturn422Problem_WhenPermissionPairIsDuplicated() {
         String resource = RbacTestSupport.unique("res").toUpperCase();
         createViaApi(resource, "READ");
         given().auth().oauth2(admin).contentType("application/json")
@@ -80,14 +80,14 @@ class PermissionResourceTest {
     }
 
     @Test
-    void blankFieldsAre400ValidationProblem() {
+    void _04_ShouldReturn400ValidationProblem_WhenFieldsAreBlank() {
         given().auth().oauth2(admin).contentType("application/json").body("{\"resource\":\"\",\"action\":\"\"}")
                 .when().post(BASE)
                 .then().statusCode(400).contentType(PROBLEM_JSON).body("status", is(400));
     }
 
     @Test
-    void updateChangesPairAndRejectsDuplicateOrUnknown() {
+    void _05_ShouldChangePairAndRejectDuplicateOrUnknown_WhenUpdatingPermission() {
         String resource = RbacTestSupport.unique("res").toUpperCase();
         Long id = createViaApi(resource, "READ");
         createViaApi(resource, "WRITE");
@@ -105,7 +105,7 @@ class PermissionResourceTest {
     }
 
     @Test
-    void deleteRemovesPermissionThenIs404() {
+    void _06_ShouldReturn404AfterRemoval_WhenPermissionDeleted() {
         Long id = createViaApi(RbacTestSupport.unique("res").toUpperCase(), "READ");
         given().auth().oauth2(admin).when().delete(BASE + "/" + id)
                 .then().statusCode(200).body("success", is(true));
@@ -114,7 +114,7 @@ class PermissionResourceTest {
     }
 
     @Test
-    void readerCanListButNotWrite() {
+    void _07_ShouldAllowListButNotWrite_WhenCallerIsReader() {
         support.createRole("perm-reader", "PERMISSION:READ");
         String token = support.token(support.createUser("perm-reader"));
         given().auth().oauth2(token).when().get(BASE).then().statusCode(200);
@@ -126,7 +126,7 @@ class PermissionResourceTest {
     }
 
     @Test
-    void userWithoutRolesIsForbiddenAndAnonymousIs401() {
+    void _08_ShouldReturn403Or401_WhenUserHasNoRolesOrIsAnonymous() {
         String token = support.token(support.createUser());
         given().auth().oauth2(token).when().get(BASE).then().statusCode(403).contentType(PROBLEM_JSON);
         given().when().get(BASE).then().statusCode(401).contentType(PROBLEM_JSON).body("status", is(401));

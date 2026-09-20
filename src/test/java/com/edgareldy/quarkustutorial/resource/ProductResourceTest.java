@@ -89,7 +89,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void createReturns201WithEnvelopeAndMoneyRoundTrips() {
+    void _01_ShouldReturn201WithEnvelopeAndKeepMoney_WhenCreatingProduct() {
         Long cat = category();
         String json = given().auth().oauth2(admin).contentType("application/json")
                 .body(body(cat, "Keyboard", "79.99")).when().post(BASE)
@@ -110,7 +110,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void getByIdAndUpdate() {
+    void _02_ShouldReturnAndUpdateProduct_WhenProductExists() {
         Long cat = category();
         Long other = category();
         Long id = product(cat, "Mouse", "10.50");
@@ -129,7 +129,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void listIsPaginatedAndOrderedById() {
+    void _03_ShouldPaginateAndOrderById_WhenListingProducts() {
         Long cat = category();
         Long a = product(cat, "A", "1.00");
         Long b = product(cat, "B", "2.00");
@@ -151,7 +151,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void categoryFilterReturnsOnlyRequestedCategory() {
+    void _04_ShouldReturnOnlyRequestedCategory_WhenCategoryFilterGiven() {
         Long catA = category();
         Long catB = category();
         Long a1 = product(catA, "A1", "1.00");
@@ -177,13 +177,13 @@ class ProductResourceTest {
     }
 
     @Test
-    void invalidPageSizeIs400Problem() {
+    void _05_ShouldReturn400Problem_WhenPageSizeIsInvalid() {
         given().auth().oauth2(admin).queryParam("size", 0).when().get(BASE)
                 .then().statusCode(400).contentType(PROBLEM_JSON).body("$", not(hasKey("success")));
     }
 
     @Test
-    void unknownIdIs404Problem() {
+    void _06_ShouldReturn404Problem_WhenProductIdUnknown() {
         Long cat = category();
         given().auth().oauth2(admin).when().get(BASE + "/999999999")
                 .then().statusCode(404).contentType(PROBLEM_JSON).body("status", is(404))
@@ -196,7 +196,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void invalidBodyIs400ProblemWithViolations() {
+    void _07_ShouldReturn400ProblemWithViolations_WhenBodyInvalid() {
         Long cat = category();
         List<String> bodies = List.of(
                 body(cat, "  ", "1.00"),
@@ -219,7 +219,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void unknownCategoryIs422ProblemOnCreateAndUpdate() {
+    void _08_ShouldReturn422Problem_WhenCategoryUnknownOnCreateOrUpdate() {
         Long cat = category();
         given().auth().oauth2(admin).contentType("application/json").body(body(999999999, "Ghost", "1.00"))
                 .when().post(BASE)
@@ -235,7 +235,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void deleteRemovesProduct() {
+    void _09_ShouldRemoveProduct_WhenDeleteSucceeds() {
         Long id = product(category(), "Gone", "1.00");
         given().auth().oauth2(admin).when().delete(BASE + "/" + id)
                 .then().statusCode(200).body("success", is(true));
@@ -243,7 +243,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void categoryWithProductsCannotBeDeletedUntilProductIsDeleted() {
+    void _10_ShouldAllowCategoryDeletion_WhenItsProductIsDeleted() {
         Long cat = category();
         Long id = product(cat, "Blocker", "1.00");
         given().auth().oauth2(admin).when().delete(CATEGORIES + "/" + cat)
@@ -254,7 +254,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void readOnlyUserCanReadButNotWrite() {
+    void _11_ShouldAllowReadButNotWrite_WhenCallerIsReadOnly() {
         Long cat = category();
         Long id = product(cat, "Shared", "1.00");
         String reader = tokenWith("PRODUCT:READ");
@@ -271,7 +271,7 @@ class ProductResourceTest {
     }
 
     @Test
-    void userWithoutPermissionIs403AndNoTokenIs401() {
+    void _12_ShouldReturn403Or401_WhenUserLacksPermissionOrTokenMissing() {
         String nobody = support.token(support.createUser());
         given().auth().oauth2(nobody).when().get(BASE).then().statusCode(403).contentType(PROBLEM_JSON);
         given().auth().oauth2(nobody).when().get(BASE + "/1").then().statusCode(403).contentType(PROBLEM_JSON);
