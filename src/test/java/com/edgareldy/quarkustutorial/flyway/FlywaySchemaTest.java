@@ -34,7 +34,7 @@ class FlywaySchemaTest {
     DataSource dataSource;
 
     @Test
-    void allExpectedTablesExistInPublicSchema() throws SQLException {
+    void _01_ShouldCreateAllExpectedTables_WhenMigrationsRun() throws SQLException {
         Set<String> tables = new HashSet<>();
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
@@ -48,7 +48,7 @@ class FlywaySchemaTest {
     }
 
     @Test
-    void schemaHistoryShowsVersionOneSuccess() throws SQLException {
+    void _02_ShouldRecordVersionOneAsSuccess_WhenMigrationsRun() throws SQLException {
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
                      "SELECT success FROM flyway_schema_history WHERE version = '1'");
@@ -59,7 +59,7 @@ class FlywaySchemaTest {
     }
 
     @Test
-    void duplicateUserEmailIsRejectedByTheDatabase() throws SQLException {
+    void _03_ShouldRejectInsert_WhenUserEmailIsDuplicated() throws SQLException {
         String sql = "INSERT INTO users (first_name, last_name, email, password) VALUES ('A', 'B', ?, 'x')";
         String email = "dup-" + System.nanoTime() + "@example.com";
         try (Connection c = dataSource.getConnection()) {
