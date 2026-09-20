@@ -45,7 +45,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByEmailIsCaseInsensitive() {
+    void _01_ShouldFindUser_WhenEmailCaseDiffers() {
         String email = "mixed" + System.nanoTime() + "@example.com";
         QuarkusTransaction.requiringNew().run(() -> users.persist(newUser(email)));
         QuarkusTransaction.requiringNew().run(() -> {
@@ -56,7 +56,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void duplicateEmailViolatesUniqueConstraint() {
+    void _02_ShouldViolateUniqueConstraint_WhenEmailIsDuplicated() {
         String email = "dup" + System.nanoTime() + "@example.com";
         QuarkusTransaction.requiringNew().run(() -> users.persist(newUser(email)));
         assertThrows(RuntimeException.class,
@@ -67,7 +67,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    void tokenRepositoriesFindTheirRows() {
+    void _03_ShouldFindTheirRows_WhenTokensSaved() {
         long n = System.nanoTime();
         String email = "tok" + n + "@example.com";
         QuarkusTransaction.requiringNew().run(() -> {
