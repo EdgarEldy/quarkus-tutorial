@@ -53,7 +53,7 @@ class CategoryRepositoryTest {
     }
 
     @Test
-    void persistAndFind() {
+    void _01_ShouldFindCategory_WhenPersisted() {
         categoryId = persist("Repo test");
         Category found = QuarkusTransaction.requiringNew().call(() -> repository.findById(categoryId));
         assertNotNull(found);
@@ -61,7 +61,7 @@ class CategoryRepositoryTest {
     }
 
     @Test
-    void countProductsReflectsInsertedRows() {
+    void _02_ShouldCountInsertedProducts_WhenProductsAdded() {
         categoryId = persist("Repo count");
         assertEquals(0L, QuarkusTransaction.requiringNew().call(() -> repository.countProducts(categoryId)));
 

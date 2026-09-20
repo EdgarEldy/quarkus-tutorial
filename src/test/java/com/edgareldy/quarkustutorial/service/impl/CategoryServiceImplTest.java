@@ -49,7 +49,7 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    void deleteIsRefusedWhenCategoryHasProducts() {
+    void _01_ShouldRefuseDeletion_WhenCategoryHasProducts() {
         Category c = category(1L, "Books");
         when(repository.findById(1L)).thenReturn(c);
         when(repository.countProducts(1L)).thenReturn(2L);
@@ -59,7 +59,7 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    void deleteRemovesCategoryWithoutProducts() {
+    void _02_ShouldRemoveCategory_WhenCategoryHasNoProducts() {
         Category c = category(1L, "Books");
         when(repository.findById(1L)).thenReturn(c);
         when(repository.countProducts(1L)).thenReturn(0L);
@@ -70,7 +70,7 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    void deleteMissingCategoryIsNotFound() {
+    void _03_ShouldThrowNotFound_WhenDeletingMissingCategory() {
         when(repository.findById(9L)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.delete(9L));
@@ -78,7 +78,7 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    void updateMissingCategoryIsNotFound() {
+    void _04_ShouldThrowNotFound_WhenUpdatingMissingCategory() {
         when(repository.findById(9L)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.update(9L, new CategoryRequest("x")));
@@ -86,7 +86,7 @@ class CategoryServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void listBuildsPageResponse() {
+    void _05_ShouldBuildPageResponse_WhenListingCategories() {
         PanacheQuery<Category> all = mock(PanacheQuery.class);
         PanacheQuery<Category> paged = mock(PanacheQuery.class);
         when(repository.findAll(any(Sort.class))).thenReturn(all);
