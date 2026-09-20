@@ -448,6 +448,7 @@ Quarkus lets imperative (blocking, Panache-based) and reactive (Mutiny-based) co
 - Every endpoint returns an `ApiResponse<T>` (or `ApiResponse<PageResponse<T>>` for lists)
 - Permission checks are always declarative (`@PermissionsAllowed("RESOURCE:ACTION")` on the resource method), never a manual `if` inside a method body
 - No JAX-RS resource method contains business logic - it validates via Bean Validation annotations on the request DTO, delegates to a service, and maps the result to an `ApiResponse<T>`
+- **Test naming convention**: every test method is named `_NN_Should<Outcome>_When<Condition>`, where `NN` is a two-digit sequence number with a leading zero, restarting at `_01_` in each test class and following the order of the methods in the source (e.g. `_01_ShouldReturnCategory_WhenCategoryExists`, `_02_ShouldReturnEmpty_WhenCategoryDoesNotExist`). This applies to every kind of test (unit, repository, resource, integration, parameterized). No other style (`shouldX()`, `testX()`, `givenX_whenY_thenZ()`) is accepted.
 
 ## Concepts covered
 

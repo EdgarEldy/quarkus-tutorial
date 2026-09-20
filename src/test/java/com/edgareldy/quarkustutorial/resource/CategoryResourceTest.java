@@ -83,7 +83,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void createReturns201WithEnvelope() {
+    void _01_ShouldReturn201WithEnvelope_WhenCreatingCategory() {
         String name = RbacTestSupport.unique("cat");
         Long id = given().auth().oauth2(admin).contentType("application/json")
                 .body("{\"categoryName\":\"" + name + "\"}").when().post(BASE)
@@ -96,7 +96,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void getByIdAndUpdate() {
+    void _02_ShouldReturnAndUpdateCategory_WhenCategoryExists() {
         Long id = createViaApi(RbacTestSupport.unique("cat"));
         given().auth().oauth2(admin).when().get(BASE + "/" + id)
                 .then().statusCode(200).body("success", is(true)).body("data.id", is(id.intValue()));
@@ -108,7 +108,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void listIsPaginatedAndOrderedById() {
+    void _03_ShouldPaginateAndOrderById_WhenListingCategories() {
         Long a = createViaApi(RbacTestSupport.unique("cat"));
         Long b = createViaApi(RbacTestSupport.unique("cat"));
         Long c = createViaApi(RbacTestSupport.unique("cat"));
@@ -127,13 +127,13 @@ class CategoryResourceTest {
     }
 
     @Test
-    void invalidPageSizeIs400Problem() {
+    void _04_ShouldReturn400Problem_WhenPageSizeIsInvalid() {
         given().auth().oauth2(admin).queryParam("size", 0).when().get(BASE)
                 .then().statusCode(400).contentType(PROBLEM_JSON).body("$", not(hasKey("success")));
     }
 
     @Test
-    void unknownIdIs404Problem() {
+    void _05_ShouldReturn404Problem_WhenCategoryIdUnknown() {
         given().auth().oauth2(admin).when().get(BASE + "/999999999")
                 .then().statusCode(404).contentType(PROBLEM_JSON).body("status", is(404))
                 .body("$", not(hasKey("success")));
@@ -145,7 +145,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void invalidBodyIs400ProblemWithViolations() {
+    void _06_ShouldReturn400ProblemWithViolations_WhenBodyInvalid() {
         String tooLong = "x".repeat(151);
         for (String body : List.of("{\"categoryName\":\"  \"}", "{\"categoryName\":\"" + tooLong + "\"}")) {
             given().auth().oauth2(admin).contentType("application/json").body(body).when().post(BASE)
@@ -161,7 +161,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void deleteRemovesCategory() {
+    void _07_ShouldRemoveCategory_WhenDeleteSucceeds() {
         Long id = createViaApi(RbacTestSupport.unique("cat"));
         given().auth().oauth2(admin).when().delete(BASE + "/" + id)
                 .then().statusCode(200).body("success", is(true));
@@ -169,7 +169,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void deleteWithProductsIs422UntilProductRemoved() {
+    void _08_ShouldReturn422UntilProductRemoved_WhenCategoryHasProducts() {
         Long id = createViaApi(RbacTestSupport.unique("cat"));
         Long productId = insertProduct(id);
         given().auth().oauth2(admin).when().delete(BASE + "/" + id)
@@ -183,7 +183,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void readOnlyUserCanReadButNotWrite() {
+    void _09_ShouldAllowReadButNotWrite_WhenCallerIsReadOnly() {
         Long id = createViaApi(RbacTestSupport.unique("cat"));
         String reader = tokenWith("CATEGORY:READ");
         given().auth().oauth2(reader).when().get(BASE).then().statusCode(200);
@@ -198,7 +198,7 @@ class CategoryResourceTest {
     }
 
     @Test
-    void userWithoutPermissionIs403AndNoTokenIs401() {
+    void _10_ShouldReturn403Or401_WhenUserLacksPermissionOrTokenMissing() {
         String nobody = support.token(support.createUser());
         given().auth().oauth2(nobody).when().get(BASE).then().statusCode(403).contentType(PROBLEM_JSON);
         given().auth().oauth2(nobody).when().get(BASE + "/1").then().statusCode(403).contentType(PROBLEM_JSON);
